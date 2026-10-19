@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="black-gold">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NGD Concept — Apresentação do Aplicativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="presentation-shell">
+    <!-- Left Presentation Panel -->
+    <aside class="presentation-panel">
+      <div class="pres-brand-row">
+        <div class="ngd-logo-circle lg">
+          <span class="ngd-letters">NGD</span>
+          <span class="ngd-script">concept</span>
+        </div>
+        <div>
+          <span class="pres-badge">Apresentação Executiva</span>
+          <h1>NGD Concept App</h1>
+          <p class="pres-sub">@ngdconceptbh • Belo Horizonte • Desde 2019</p>
+        </div>
+      </div>
+
+      <!-- Theme Switcher Card -->
+      <div class="pres-card">
+        <span class="pres-section-title">1. Escolha o Tema Visual</span>
+        <div class="theme-switcher-grid">
+          <button class="theme-pill active" id="btnThemeBlack" onclick="app.setTheme('black-gold')">
+            <span class="swatch swatch-black"></span>
+            Preto &amp; Dourado
+          </button>
+          <button class="theme-pill" id="btnThemeWhite" onclick="app.setTheme('white-gold')">
+            <span class="swatch swatch-white"></span>
+            Branco &amp; Dourado
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Navigation Grid for Presentation -->
+      <div class="pres-card">
+        <span class="pres-section-title">2. Navegação Rápida das Telas</span>
+        <div class="jump-grid">
+          <button onclick="app.navigate('dashboard')" class="jump-btn active" data-pres="dashboard">
+            Dashboard / Analytics
+          </button>
+          <button onclick="app.openNewSaleModal()" class="jump-btn highlight">
+            + Cadastrar Venda (PDV)
+          </button>
+          <button onclick="app.navigate('vendas')" class="jump-btn" data-pres="vendas">
+            Histórico de Vendas
+          </button>
+          <button onclick="app.navigate('fluxo')" class="jump-btn" data-pres="fluxo">
+            Fluxo de Caixa
+          </button>
+          <button onclick="app.navigate('clientes')" class="jump-btn" data-pres="clientes">
+            Clientes &amp; Top Cliente
+          </button>
+          <button onclick="app.navigate('produtos')" class="jump-btn" data-pres="produtos">
+            + Produtos (Estoque)
+          </button>
+          <button onclick="app.navigate('crm')" class="jump-btn" data-pres="crm">
+            CRM &amp; Plano VIP
+          </button>
+          <button onclick="app.navigate('metas')" class="jump-btn" data-pres="metas">
+            Metas de Vendas
+          </button>
+          <button onclick="app.navigate('precificacao')" class="jump-btn" data-pres="precificacao">
+            Calculadora Precificação
+          </button>
+          <button onclick="app.navigate('academy')" class="jump-btn" data-pres="academy">
+            NGD Academy
+          </button>
+          <button onclick="app.navigate('news')" class="jump-btn" data-pres="news">
+            News &amp; Avisos
+          </button>
+          <button onclick="app.openNotificationsModal()" class="jump-btn">
+            Central de Notificações
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Phone Device -->
+    <div class="phone-frame">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="status-time">14:37</span>
+        <div class="notch-pill"></div>
+        <div class="status-right">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <svg width="16" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+        </div>
+      </div>
+
+      <!-- App Header -->
+      <header class="app-header">
+        <button class="header-icon-btn" onclick="app.toggleDrawer()" title="Abrir Menu Lateral">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="15" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="header-center">
+          <span class="header-eyebrow" id="headerSubtitle">NGD CONCEPT • BH</span>
+          <h2 class="header-title" id="headerTitle">Dashboard</h2>
+        </div>
+
+        <div class="header-actions">
+          <button class="header-icon-btn" onclick="app.toggleThemeQuick()" title="Alternar Tema Preto/Branco">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+            </svg>
+          </button>
+          <button class="header-icon-btn" onclick="app.openNotificationsModal()" title="Abrir Notificações">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="badge-dot" id="notifBadgeCount">3</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Left Sidebar Drawer -->
+      <div class="drawer-backdrop" id="drawerBackdrop" onclick="app.closeDrawer()"></div>
+      <nav class="side-drawer" id="sideDrawer">
+        <div class="drawer-brand">
+          <div class="ngd-logo-circle">
+            <span class="ngd-letters">NGD</span>
+            <span class="ngd-script">concept</span>
+          </div>
+          <div class="drawer-brand-info">
+            <strong>NGD CONCEPT</strong>
+            <span>@ngdconceptbh • BH</span>
+          </div>
+          <button class="drawer-close" onclick="app.closeDrawer()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <ul class="drawer-nav">
+          <li>
+            <button class="drawer-link" data-screen="clientes" onclick="app.navigate('clientes')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Cliente</span>
+              </span>
+              <span class="drawer-tag gold">Top Cliente</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="crm" onclick="app.navigate('crm')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                <span>CRM</span>
+              </span>
+              <span class="drawer-tag">Plano VIP</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="metas" onclick="app.navigate('metas')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>Metas</span>
+              </span>
+              <span class="drawer-tag" id="drawerGoalBadge">82%</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="news" onclick="app.navigate('news')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+                <span>News</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="precificacao" onclick="app.navigate('precificacao')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+                <span>Precificação</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="academy" onclick="app.navigate('academy')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <span>Academy</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="produtos" onclick="app.navigate('produtos')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span>+ Produtos</span>
+              </span>
+              <span class="drawer-tag" id="drawerProductsCount">6 peças</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="ajuda" onclick="app.navigate('ajuda')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Ajuda</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="drawer-footer">
+          <button class="btn-gold" onclick="app.closeDrawer(); app.openNewSaleModal();">+ Cadastrar Venda</button>
+        </div>
+      </nav>
+
+      <!-- Main Content Viewport -->
+      <main class="app-viewport" id="appViewport"></main>
+
+      <!-- Bottom Navigation Bar -->
+      <nav class="bottom-nav">
+        <button class="bottom-item active" data-bottom="dashboard" onclick="app.navigate('dashboard')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="bottom-item" data-bottom="vendas" onclick="app.navigate('vendas')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <span>Vendas</span>
+        </button>
+
+        <div class="bottom-center-wrap">
+          <button class="bottom-center-btn" onclick="app.openNewSaleModal()" title="Cadastrar Vendas">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <span class="center-btn-label">Vender</span>
+        </div>
+
+        <button class="bottom-item" data-bottom="fluxo" onclick="app.navigate('fluxo')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <path d="M16 12h.01"></path>
+          </svg>
+          <span>Caixa</span>
+        </button>
+
+        <button class="bottom-item" data-bottom="ajuste" onclick="app.navigate('ajuste')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Ajuste</span>
+        </button>
+      </nav>
+
+      <!-- Sheet: Cadastrar Vendas -->
+      <div class="modal-overlay" id="saleModalOverlay" onclick="if(event.target===this) app.closeNewSaleModal()">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-header">
+            <h3>Cadastrar Venda</h3>
+            <button class="header-icon-btn" onclick="app.closeNewSaleModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body" id="saleModalBody"></div>
+        </div>
+      </div>
+
+      <!-- Sheet: Detalhes / Notificações / Cadastros -->
+      <div class="modal-overlay" id="genericModalOverlay" onclick="if(event.target===this) app.closeGenericModal()">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-header">
+            <h3 id="genericModalTitle">Detalhes</h3>
+            <button class="header-icon-btn" onclick="app.closeGenericModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body" id="genericModalBody"></div>
+        </div>
+      </div>
+
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
