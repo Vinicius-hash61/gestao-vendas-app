@@ -1742,3 +1742,16 @@ button, input, select, textarea {
   object-fit: cover;
   display: block;
 }
+
+/* Imagem de fundo (fantasma) */
+body {
+  background-image: url('ghost-bg.jpg');
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+:root[data-theme="white-gold"] body {
+  background-image: linear-gradient(rgba(244, 240, 250, 0.86), rgba(244, 240, 250, 0.86)), url('ghost-bg.jpg');
+}
