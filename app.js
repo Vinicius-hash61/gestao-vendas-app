@@ -1343,87 +1343,79 @@ const app = {
     return this.state.pricing;
   },
 
-  pricingRows(list, valueLabel) {
+  pricingRows(list, unit) {
     return this.getPricing()[list].map((row, i) => `
-      <div class="pr-row">
-        <input class="input-box" value="${this.esc(row.name)}" placeholder="Nome"
+      <div class="pr-line">
+        <button class="pr-minus" title="Remover" onclick="app.removePricingRow('${list}', ${i})">&minus;</button>
+        <input class="pr-name" value="${this.esc(row.name)}" placeholder="Nome"
           oninput="app.setPricingRow('${list}', ${i}, 'name', this.value)" />
-        <input class="input-box" type="number" step="0.01" min="0" value="${row.value}" placeholder="${valueLabel}"
+        <span class="pr-unit">${unit}</span>
+        <input class="pr-val" type="number" inputmode="decimal" step="0.01" min="0" value="${row.value}"
           oninput="app.setPricingRow('${list}', ${i}, 'value', this.value)" />
-        <button class="pr-del" title="Remover" onclick="app.removePricingRow('${list}', ${i})">&times;</button>
       </div>`).join('');
   },
 
   pricingPct(field, label) {
     return `
-      <div class="pr-pct">
-        <label>${label}</label>
-        <div class="pr-pct-input">
-          <input class="input-box" type="number" step="0.1" min="0" value="${this.getPricing()[field]}"
-            oninput="app.setPricingNum('${field}', this.value)" />
-          <span>%</span>
-        </div>
+      <div class="pr-line">
+        <span class="pr-label">${label}</span>
+        <input class="pr-val" type="number" inputmode="decimal" step="0.1" min="0" value="${this.getPricing()[field]}"
+          oninput="app.setPricingNum('${field}', this.value)" />
+        <span class="pr-unit">%</span>
+      </div>`;
+  },
+
+  pricingSection(title, hint, body) {
+    return `
+      <div class="pr-section">
+        <h4 class="pr-title">${title}</h4>
+        ${hint ? `<p class="pr-hint">${hint}</p>` : ''}
+        <div class="pr-group">${body}</div>
       </div>`;
   },
 
   renderPrecificacao() {
     const pr = this.getPricing();
     return `
-      <div id="pricingHero" class="summary-panel"></div>
+      <div id="pricingHero" class="pr-hero"></div>
 
-      <div class="card">
-        <div class="section-bar"><span class="section-heading">Preços ideais</span></div>
-        <div id="pricingList" class="list-stack"></div>
+      <div class="pr-section">
+        <h4 class="pr-title">Preços ideais</h4>
+        <div id="pricingList" class="pr-prices"></div>
       </div>
 
-      <div class="card">
-        <div class="section-bar">
-          <span class="section-heading">Lista de produtos</span>
-          <button class="link-gold" onclick="app.addPricingRow('products')">+ Produto</button>
-        </div>
-        <span class="pr-hint">Nome e custo de compra de cada produto (R$)</span>
-        ${this.pricingRows('products', 'Custo R$')}
-      </div>
+      ${this.pricingSection('Lista de produtos', 'Nome e custo de compra de cada produto.', `
+        ${this.pricingRows('products', 'R$')}
+        <button class="pr-add" onclick="app.addPricingRow('products')">+ Adicionar produto</button>`)}
 
-      <div class="card">
-        <div class="section-bar">
-          <span class="section-heading">Ficha técnica</span>
-          <button class="link-gold" onclick="app.addPricingRow('ficha')">+ Custo</button>
-        </div>
-        <span class="pr-hint">Custos extras somados a cada produto (embalagem, frete...)</span>
+      ${this.pricingSection('Ficha técnica', 'Custos extras somados a cada produto, como embalagem e frete.', `
         ${this.pricingRows('ficha', 'R$')}
-        <div class="pr-total"><span>Total</span><strong id="pricingFichaTotal"></strong></div>
-      </div>
+        <button class="pr-add" onclick="app.addPricingRow('ficha')">+ Adicionar custo</button>
+        <div class="pr-line pr-sum"><span class="pr-label">Total</span><strong id="pricingFichaTotal"></strong></div>`)}
 
-      <div class="card">
-        <div class="section-bar"><span class="section-heading">CV sem CMV</span></div>
+      ${this.pricingSection('CV sem CMV', 'Percentuais que entram no cálculo do markup.', `
         ${this.pricingPct('card', 'Taxa de cartão')}
         ${this.pricingPct('tax', 'Impostos')}
-        <div class="pr-pct">
-          <label>Despesas fixas <small>(calculada)</small></label>
-          <strong id="pricingFixedPct" class="pr-pct-calc"></strong>
+        <div class="pr-line">
+          <span class="pr-label">Despesas fixas <small>calculada</small></span>
+          <strong id="pricingFixedPct"></strong>
         </div>
         ${this.pricingPct('profit', 'Lucro')}
         ${this.pricingPct('invest', 'Investimento')}
-        <div class="pr-total"><span>Soma dos percentuais</span><strong id="pricingPctTotal"></strong></div>
-      </div>
+        <div class="pr-line pr-sum"><span class="pr-label">Soma</span><strong id="pricingPctTotal"></strong></div>`)}
 
-      <div class="card">
-        <div class="section-bar"><span class="section-heading">Sua receita aproximada</span></div>
-        <div class="field-group" style="margin-bottom:0">
-          <input class="input-box" type="number" step="0.01" min="0" value="${pr.revenue}"
+      ${this.pricingSection('Sua receita aproximada', 'Usada para transformar as despesas fixas em percentual.', `
+        <div class="pr-line">
+          <span class="pr-label">Receita mensal</span>
+          <span class="pr-unit">R$</span>
+          <input class="pr-val" type="number" inputmode="decimal" step="0.01" min="0" value="${pr.revenue}"
             oninput="app.setPricingNum('revenue', this.value)" />
-        </div>
-      </div>
+        </div>`)}
 
-      <div class="card">
-        <div class="section-bar">
-          <span class="section-heading">Suas despesas fixas</span>
-          <button class="link-gold" onclick="app.addPricingRow('fixed')">+ Despesa</button>
-        </div>
+      ${this.pricingSection('Suas despesas fixas', '', `
         ${this.pricingRows('fixed', 'R$')}
-        <div class="pr-total"><span>Total</span><strong id="pricingFixedTotal"></strong></div>
-      </div>
+        <button class="pr-add" onclick="app.addPricingRow('fixed')">+ Adicionar despesa</button>
+        <div class="pr-line pr-sum"><span class="pr-label">Total</span><strong id="pricingFixedTotal"></strong></div>`)}
     `;
   },
 
@@ -1471,35 +1463,38 @@ const app = {
 
     const list = document.getElementById('pricingList');
     if (totalPct >= 100) {
+      hero.classList.add('pr-hero-error');
       hero.innerHTML = `
-        <span class="summary-label">Seu markup</span>
-        <div class="summary-value" style="color:var(--danger);margin:4px 0 4px">—</div>
-        <span style="font-size:12.5px;color:var(--danger)">A soma dos percentuais (${pct(totalPct)}) precisa ficar abaixo de 100%.</span>`;
+        <span class="pr-hero-label">Seu markup</span>
+        <div class="pr-hero-value">—</div>
+        <span class="pr-hero-note">A soma dos percentuais (${pct(totalPct)}) precisa ficar abaixo de 100%.</span>`;
       list.innerHTML = '';
       return;
     }
 
     const markup = 1 / (1 - totalPct / 100);
+    hero.classList.remove('pr-hero-error');
     hero.innerHTML = `
-      <span class="summary-label">Seu markup</span>
-      <div class="summary-value" style="margin:4px 0 10px">${markup.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</div>
-      <div class="summary-grid" style="padding-top:8px">
-        <div class="summary-col"><span>Percentuais</span><strong>${pct(totalPct)}</strong></div>
-        <div class="summary-col"><span>Ficha técnica</span><strong>${this.formatBRL(fichaTotal)}</strong></div>
-        <div class="summary-col"><span>Desp. fixas</span><strong>${pct(fixedPct)}</strong></div>
+      <span class="pr-hero-label">Seu markup</span>
+      <div class="pr-hero-value">${markup.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}<small>x</small></div>
+      <div class="pr-chips">
+        <div><span>Percentuais</span><strong>${pct(totalPct)}</strong></div>
+        <div><span>Ficha técnica</span><strong>${this.formatBRL(fichaTotal)}</strong></div>
+        <div><span>Desp. fixas</span><strong>${pct(fixedPct)}</strong></div>
       </div>`;
 
     list.innerHTML = pr.products.map(r => {
-      const base = (parseFloat(r.value) || 0) + fichaTotal;
+      const cost = parseFloat(r.value) || 0;
+      const base = cost + fichaTotal;
       return `
-        <div class="row-card">
-          <div class="row-main">
+        <div class="pr-price">
+          <div class="pr-price-main">
             <strong>${this.esc(r.name || '—')}</strong>
-            <span>Custo ${this.formatBRL(parseFloat(r.value) || 0)} + ficha ${this.formatBRL(fichaTotal)}</span>
+            <span>Custo ${this.formatBRL(cost)} + ficha ${this.formatBRL(fichaTotal)}</span>
           </div>
-          <div class="row-side">
-            <span>Preço de venda ideal</span>
-            <strong style="color:var(--gold)">${this.formatBRL(base * markup)}</strong>
+          <div class="pr-price-val">
+            <span>Preço ideal</span>
+            <strong>${this.formatBRL(base * markup)}</strong>
           </div>
         </div>`;
     }).join('') || '<span class="pr-hint">Adicione produtos para calcular.</span>';
