@@ -11,6 +11,7 @@ const initialData = {
       tier: 'Gold',
       phone: '(31) 99841-2210',
       email: 'gabriel.h@email.com',
+      birthday: '1996-11-14',
       city: 'Belo Horizonte, MG',
       notes: 'Plano VIP ativo. Veste G nas camisetas Oversized e 42 nas calças cargo.',
       since: '2023'
@@ -21,6 +22,7 @@ const initialData = {
       tier: 'Plano VIP',
       phone: '(31) 99120-8450',
       email: 'lucas.matheus@email.com',
+      birthday: '1994-12-03',
       city: 'Nova Lima, MG',
       notes: 'Sempre compra lançamentos de drops exclusivos via PIX.',
       since: '2024'
@@ -31,6 +33,7 @@ const initialData = {
       tier: 'Gold',
       phone: '(11) 98812-3090',
       email: 'rafael.drummond@email.com',
+      birthday: '1992-10-31',
       city: 'São Paulo, SP',
       notes: 'Envio SEDEX. Prefere peças pretas e conjuntos street.',
       since: '2024'
@@ -41,6 +44,7 @@ const initialData = {
       tier: 'Cliente',
       phone: '(31) 98409-1172',
       email: 'matheus.costa@email.com',
+      birthday: '1998-02-20',
       city: 'Contagem, MG',
       notes: 'Retirada em Belo Horizonte.',
       since: '2025'
@@ -405,6 +409,7 @@ const app = {
       fluxo: ['FINANCEIRO', 'Fluxo de Caixa'],
       ajuste: ['PREFERÊNCIAS', 'Ajustes'],
       clientes: ['CARTEIRA VIP & GOLD', 'Clientes'],
+      visao360: ['PERFIL ANALÍTICO', 'Visão 360'],
       produtos: ['ESTOQUE DE PEÇAS', 'Produtos'],
       crm: ['RELACIONAMENTO', 'CRM & Plano VIP'],
       metas: ['DESEMPENHO MENSAL', 'Metas'],
@@ -427,6 +432,7 @@ const app = {
       case 'vendas': vp.innerHTML = this.renderVendas(); break;
       case 'fluxo': vp.innerHTML = this.renderFluxo(); break;
       case 'clientes': vp.innerHTML = this.renderClientes(); break;
+      case 'visao360': vp.innerHTML = this.renderVisao360(); break;
       case 'produtos': vp.innerHTML = this.renderProdutos(); break;
       case 'crm': vp.innerHTML = this.renderCRM(); break;
       case 'metas': vp.innerHTML = this.renderMetas(); break;
@@ -1045,6 +1051,7 @@ const app = {
           <div><strong style="color:var(--text-main)">Telefone:</strong> ${client.phone}</div>
           <div><strong style="color:var(--text-main)">E-mail:</strong> ${client.email}</div>
           <div><strong style="color:var(--text-main)">Cidade:</strong> ${client.city}</div>
+          <div><strong style="color:var(--text-main)">Aniversário:</strong> ${client.birthday ? this.fmtBirthday(client.birthday) : 'não informado'}</div>
           <div><strong style="color:var(--text-main)">Preferências:</strong> ${client.notes}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px">
@@ -1081,6 +1088,10 @@ const app = {
         <input id="ncPhone" class="input-box" placeholder="(31) 99999-0000" />
       </div>
       <div class="field-group">
+        <label>Data de aniversário</label>
+        <input id="ncBirth" type="date" class="input-box" />
+      </div>
+      <div class="field-group">
         <label>Categoria</label>
         <select id="ncTier" class="select-box">
           <option value="Gold">Gold</option>
@@ -1110,6 +1121,7 @@ const app = {
       tier: document.getElementById('ncTier').value,
       phone: document.getElementById('ncPhone').value.trim() || '(31) 99000-0000',
       email: 'cliente@ngdconcept.com.br',
+      birthday: document.getElementById('ncBirth').value || '',
       city: document.getElementById('ncCity').value.trim() || 'Belo Horizonte, MG',
       notes: document.getElementById('ncNotes').value.trim() || 'Cadastrado via sistema.',
       since: '2026'
@@ -1118,6 +1130,184 @@ const app = {
     this.closeGenericModal();
     this.showToast('Cliente cadastrado');
     this.navigate('clientes');
+  },
+
+  /* ==================== 4.1 VISÃO 360 ==================== */
+  _f360: 'todos',
+
+  fmtBirthday(iso) {
+    const [, m, d] = String(iso).split('-');
+    return d && m ? `${d}/${m}` : '';
+  },
+
+  // Dias até o próximo aniversário e idade que a pessoa fará
+  birthdayInfo(iso) {
+    if (!iso) return null;
+    const [y, m, d] = iso.split('-').map(Number);
+    if (!m || !d) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let next = new Date(today.getFullYear(), m - 1, d);
+    if (next < today) next = new Date(today.getFullYear() + 1, m - 1, d);
+    const days = Math.round((next - today) / 86400000);
+    return { days, age: y ? next.getFullYear() - y : null };
+  },
+
+  productCategory(name) {
+    const n = name.toLowerCase();
+    if (n.includes('camiseta') || n.includes('t-shirt')) return 'Camisetas';
+    if (n.includes('calça')) return 'Calças';
+    if (n.includes('conjunto')) return 'Conjuntos';
+    if (n.includes('jaqueta')) return 'Jaquetas';
+    if (n.includes('boné')) return 'Bonés';
+    return name.split(' ')[0];
+  },
+
+  getClient360() {
+    const top = obj => Object.entries(obj).sort((a, b) => b[1] - a[1])[0] || null;
+    return this.getClientStats().map((c, i) => {
+      const prod = {}, cat = {}, pay = {};
+      c.salesHistory.forEach(sale => {
+        pay[sale.paymentMethod] = (pay[sale.paymentMethod] || 0) + 1;
+        sale.items.forEach(it => {
+          prod[it.name] = (prod[it.name] || 0) + it.qty;
+          const k = this.productCategory(it.name);
+          cat[k] = (cat[k] || 0) + it.qty;
+        });
+      });
+      return {
+        ...c,
+        rank: i + 1,
+        // as vendas são gravadas da mais recente para a mais antiga
+        lastSale: c.salesHistory[0] || null,
+        topProduct: top(prod),
+        topCategory: top(cat),
+        topPayment: top(pay),
+        avgTicket: c.ordersCount ? c.totalSpent / c.ordersCount : 0,
+        bday: this.birthdayInfo(c.birthday)
+      };
+    });
+  },
+
+  suggestCampaign(c) {
+    const first = c.name.split(' ')[0];
+    const store = this.state.storeName;
+    if (c.bday && c.bday.days <= 30) {
+      const when = c.bday.days === 0 ? 'hoje' : c.bday.days === 1 ? 'amanhã' : `em ${c.bday.days} dias`;
+      return { label: 'Aniversário', why: `Faz aniversário ${when}`, text: `Oi ${first}! Seu aniversário está chegando e a ${store} preparou um presente especial pra você. Posso te mandar?` };
+    }
+    if (!c.ordersCount) {
+      return { label: 'Primeira compra', why: 'Ainda não comprou', text: `Oi ${first}! Separei peças da ${store} que combinam com você. Quer ver?` };
+    }
+    const fav = c.topCategory ? c.topCategory[0].toLowerCase() : 'peças';
+    if (c.tier === 'Gold' || c.tier === 'Plano VIP') {
+      return { label: 'Lançamento exclusivo', why: `${c.tier} • gosta de ${fav}`, text: `Oi ${first}! Chegou um drop novo de ${fav} da ${store} e você tem acesso antecipado. Quer que eu reserve o seu tamanho?` };
+    }
+    return { label: 'Recompra', why: `Gosta de ${fav}`, text: `Oi ${first}! Chegaram novidades em ${fav} na ${store}. Quer dar uma olhada?` };
+  },
+
+  setFilter360(f) {
+    this._f360 = f;
+    this.navigate('visao360');
+  },
+
+  setBirthday(id, value) {
+    const c = this.state.clients.find(x => x.id === id);
+    if (!c) return;
+    c.birthday = value;
+    this.saveState();
+    this.navigate('visao360');
+  },
+
+  sendCampaign(id) {
+    const c = this.getClient360().find(x => x.id === id);
+    if (!c) return;
+    let num = String(c.phone).replace(/\D/g, '');
+    if (num.length <= 11) num = `55${num}`;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(this.suggestCampaign(c).text)}`, '_blank', 'noopener');
+  },
+
+  renderVisao360() {
+    const all = this.getClient360();
+    const f = this._f360;
+    const upcoming = all.filter(c => c.bday && c.bday.days <= 30).sort((a, b) => a.bday.days - b.bday.days);
+
+    const filters = [
+      ['todos', 'Todos'],
+      ['aniversario', `Aniversariantes (${upcoming.length})`],
+      ['Gold', 'Gold'],
+      ['Plano VIP', 'Plano VIP'],
+      ['Cliente', 'Cliente']
+    ];
+
+    let list = all;
+    if (f === 'aniversario') list = upcoming;
+    else if (f !== 'todos') list = all.filter(c => c.tier === f);
+
+    // produto campeão da loja
+    const sold = {};
+    this.state.sales.forEach(sale => sale.items.forEach(it => { sold[it.name] = (sold[it.name] || 0) + it.qty; }));
+    const bestSeller = Object.entries(sold).sort((a, b) => b[1] - a[1])[0];
+
+    const row = (k, v) => `<div class="kv"><span>${k}</span><strong>${v}</strong></div>`;
+
+    return `
+      <div class="pr-hero" style="padding:18px 18px 16px">
+        <span class="pr-hero-label">Perfil da carteira</span>
+        <div class="pr-chips" style="margin-top:10px">
+          <div><span>Clientes</span><strong>${all.length}</strong></div>
+          <div><span>Aniversários (30d)</span><strong>${upcoming.length}</strong></div>
+          <div><span>Top cliente</span><strong>${all[0] ? this.esc(all[0].name.split(' ')[0]) : '—'}</strong></div>
+        </div>
+        ${bestSeller ? `<span class="pr-hero-note" style="display:block;margin-top:12px">Campeão de vendas: ${this.esc(bestSeller[0])} (${bestSeller[1]} un.)</span>` : ''}
+      </div>
+
+      <div class="filter-strip">
+        ${filters.map(([k, label]) => `<button class="filter-btn ${f === k ? 'active' : ''}" onclick="app.setFilter360('${k}')">${label}</button>`).join('')}
+      </div>
+
+      <div class="list-stack">
+        ${list.map(c => {
+          const camp = this.suggestCampaign(c);
+          const bd = c.bday
+            ? `${this.fmtBirthday(c.birthday)} • ${c.bday.days === 0 ? 'é hoje!' : c.bday.days === 1 ? 'amanhã' : `em ${c.bday.days} dias`}${c.bday.age ? ` (${c.bday.age} anos)` : ''}`
+            : '';
+          return `
+          <div class="card v360">
+            <div class="v360-head" onclick="app.openClientModal('${c.id}')">
+              <div class="avatar-box">${this.esc(c.name.split(' ').map(w => w[0]).slice(0, 2).join(''))}</div>
+              <div class="row-main">
+                <strong>${this.esc(c.name)}</strong>
+                <span>${this.esc(c.tier)} • ${c.rank}º no ranking • desde ${this.esc(c.since)}</span>
+              </div>
+            </div>
+
+            <div class="kv">
+              <span>Aniversário</span>
+              <strong>
+                ${bd ? `<small>${bd}</small>` : ''}
+                <input class="kv-date" type="date" value="${this.esc(c.birthday || '')}" onchange="app.setBirthday('${c.id}', this.value)" />
+              </strong>
+            </div>
+            ${row('Última compra', c.lastSale ? `${this.esc(c.lastSale.date)} • ${this.formatBRL(c.lastSale.total)}` : 'Sem compras')}
+            ${row('Total gasto', `${this.formatBRL(c.totalSpent)} • ${c.ordersCount} ${c.ordersCount === 1 ? 'pedido' : 'pedidos'}`)}
+            ${row('Ticket médio', this.formatBRL(c.avgTicket))}
+            ${row('Produto mais comprado', c.topProduct ? `${this.esc(c.topProduct[0])} (${c.topProduct[1]}x)` : '—')}
+            ${row('Categoria favorita', c.topCategory ? `${c.topCategory[0]} (${c.topCategory[1]} un.)` : '—')}
+            ${row('Pagamento preferido', c.topPayment ? this.esc(c.topPayment[0]) : '—')}
+
+            <div class="v360-camp">
+              <div>
+                <span>Campanha sugerida</span>
+                <strong>${camp.label}</strong>
+                <small>${this.esc(camp.why)}</small>
+              </div>
+              <button class="btn-gold" style="width:auto;padding:10px 16px;font-size:14px" onclick="app.sendCampaign('${c.id}')">Enviar</button>
+            </div>
+          </div>`;
+        }).join('') || '<div class="card" style="color:var(--text-muted)">Nenhum cliente neste filtro.</div>'}
+      </div>
+    `;
   },
 
   /* ==================== 5. + PRODUTOS ==================== */

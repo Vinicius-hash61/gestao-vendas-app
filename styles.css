@@ -2005,3 +2005,90 @@ body::before {
   background: var(--bg-card);
   color: var(--text-main);
 }
+
+/* Visão 360 */
+.v360 {
+  padding: 6px 16px 14px;
+}
+
+.v360-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  min-height: 42px;
+  border-top: 0.5px solid var(--glass-line);
+  font-size: 14px;
+}
+
+.kv > span {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.kv > strong {
+  font-weight: 500;
+  text-align: right;
+  min-width: 0;
+}
+
+.kv small {
+  display: block;
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.kv-date {
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  text-align: right;
+  outline: none;
+  color-scheme: dark;
+  max-width: 130px;
+}
+
+:root[data-theme="white-gold"] .kv-date {
+  color-scheme: light;
+}
+
+.v360-camp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--glass-line);
+}
+
+.v360-camp span {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.v360-camp strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-top: 2px;
+}
+
+.v360-camp small {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}

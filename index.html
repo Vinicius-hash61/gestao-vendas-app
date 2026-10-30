@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
   <link rel="icon" href="logo.png" />
-  <link rel="stylesheet" href="styles.css?v=20261030d" />
+  <link rel="stylesheet" href="styles.css?v=20261030e" />
 </head>
 <body>
   <div class="presentation-shell">
@@ -59,6 +59,9 @@
           </button>
           <button onclick="app.navigate('produtos')" class="jump-btn" data-pres="produtos">
             + Produtos (Estoque)
+          </button>
+          <button onclick="app.navigate('visao360')" class="jump-btn" data-pres="visao360">
+            Visão 360 do Cliente
           </button>
           <button onclick="app.navigate('crm')" class="jump-btn" data-pres="crm">
             CRM &amp; Plano VIP
@@ -153,6 +156,15 @@
                 <span>Cliente</span>
               </span>
               <span class="drawer-tag gold">Top Cliente</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="visao360" onclick="app.navigate('visao360')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18M3 12h18"/></svg>
+                <span>Visão 360</span>
+              </span>
+              <span class="drawer-tag gold">Perfil</span>
             </button>
           </li>
           <li>
@@ -300,6 +312,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261030d"></script>
+  <script src="app.js?v=20261030e"></script>
 </body>
 </html>
