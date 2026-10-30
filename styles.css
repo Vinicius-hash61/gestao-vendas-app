@@ -1479,3 +1479,75 @@ button, input, select, textarea {
   color: var(--text-main);
   font-size: 17px;
 }
+
+/* Precificação */
+.pr-row {
+  display: grid;
+  grid-template-columns: 1fr 96px 28px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.pr-row .input-box {
+  padding: 9px 11px;
+  font-size: 14px;
+}
+
+.pr-del {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-card-subtle);
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pr-hint {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.pr-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--border-strong);
+  font-size: 14px;
+}
+
+.pr-pct {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.pr-pct small {
+  color: var(--text-muted);
+}
+
+.pr-pct-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pr-pct-input .input-box {
+  width: 84px;
+  padding: 9px 11px;
+  font-size: 14px;
+  text-align: right;
+}
+
+.pr-pct-calc {
+  font-weight: 600;
+}

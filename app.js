@@ -1317,68 +1317,192 @@ const app = {
   },
 
   /* ==================== 9. PRECIFICAÇÃO ==================== */
-  renderPrecificacao() {
+  defaultPricing() {
+    return {
+      products: [
+        { name: 'Camisa da Lacoste', value: 24 },
+        { name: 'Bermuda', value: 50 },
+        { name: 'Moletom', value: 65 },
+        { name: 'Conjunto', value: 110 }
+      ],
+      ficha: [
+        { name: 'Embalagem', value: 0 },
+        { name: 'Frete na compra', value: 0 }
+      ],
+      fixed: ['Água', 'Luz', 'Internet', 'Aluguel', 'Funcionários', 'MEI'].map(name => ({ name, value: 0 })),
+      revenue: 2295,
+      card: 0,
+      tax: 0,
+      profit: 25,
+      invest: 10
+    };
+  },
+
+  getPricing() {
+    if (!this.state.pricing) this.state.pricing = this.defaultPricing();
+    return this.state.pricing;
+  },
+
+  pricingRows(list, valueLabel) {
+    return this.getPricing()[list].map((row, i) => `
+      <div class="pr-row">
+        <input class="input-box" value="${this.esc(row.name)}" placeholder="Nome"
+          oninput="app.setPricingRow('${list}', ${i}, 'name', this.value)" />
+        <input class="input-box" type="number" step="0.01" min="0" value="${row.value}" placeholder="${valueLabel}"
+          oninput="app.setPricingRow('${list}', ${i}, 'value', this.value)" />
+        <button class="pr-del" title="Remover" onclick="app.removePricingRow('${list}', ${i})">&times;</button>
+      </div>`).join('');
+  },
+
+  pricingPct(field, label) {
     return `
+      <div class="pr-pct">
+        <label>${label}</label>
+        <div class="pr-pct-input">
+          <input class="input-box" type="number" step="0.1" min="0" value="${this.getPricing()[field]}"
+            oninput="app.setPricingNum('${field}', this.value)" />
+          <span>%</span>
+        </div>
+      </div>`;
+  },
+
+  renderPrecificacao() {
+    const pr = this.getPricing();
+    return `
+      <div id="pricingHero" class="summary-panel"></div>
+
       <div class="card">
-        <div class="field-group">
-          <label>Custo de Produção / Fornecedor (R$)</label>
-          <input id="calcCost" type="number" value="85" class="input-box" oninput="app.recalcPricing()" />
+        <div class="section-bar"><span class="section-heading">Preços ideais</span></div>
+        <div id="pricingList" class="list-stack"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-bar">
+          <span class="section-heading">Lista de produtos</span>
+          <button class="link-gold" onclick="app.addPricingRow('products')">+ Produto</button>
         </div>
-        <div class="grid-2">
-          <div class="field-group">
-            <label>Impostos &amp; Taxas (%)</label>
-            <input id="calcTax" type="number" value="12" class="input-box" oninput="app.recalcPricing()" />
-          </div>
-          <div class="field-group">
-            <label>Embalagem / Envio (%)</label>
-            <input id="calcFixed" type="number" value="8" class="input-box" oninput="app.recalcPricing()" />
-          </div>
+        <span class="pr-hint">Nome e custo de compra de cada produto (R$)</span>
+        ${this.pricingRows('products', 'Custo R$')}
+      </div>
+
+      <div class="card">
+        <div class="section-bar">
+          <span class="section-heading">Ficha técnica</span>
+          <button class="link-gold" onclick="app.addPricingRow('ficha')">+ Custo</button>
         </div>
-        <div class="field-group">
-          <label>Margem Líquida Desejada (%)</label>
-          <input id="calcMargin" type="number" value="42" class="input-box" oninput="app.recalcPricing()" />
+        <span class="pr-hint">Custos extras somados a cada produto (embalagem, frete...)</span>
+        ${this.pricingRows('ficha', 'R$')}
+        <div class="pr-total"><span>Total</span><strong id="pricingFichaTotal"></strong></div>
+      </div>
+
+      <div class="card">
+        <div class="section-bar"><span class="section-heading">CV sem CMV</span></div>
+        ${this.pricingPct('card', 'Taxa de cartão')}
+        ${this.pricingPct('tax', 'Impostos')}
+        <div class="pr-pct">
+          <label>Despesas fixas <small>(calculada)</small></label>
+          <strong id="pricingFixedPct" class="pr-pct-calc"></strong>
         </div>
-        <div id="pricingResultBox" class="summary-panel" style="margin-top:8px"></div>
+        ${this.pricingPct('profit', 'Lucro')}
+        ${this.pricingPct('invest', 'Investimento')}
+        <div class="pr-total"><span>Soma dos percentuais</span><strong id="pricingPctTotal"></strong></div>
+      </div>
+
+      <div class="card">
+        <div class="section-bar"><span class="section-heading">Sua receita aproximada</span></div>
+        <div class="field-group" style="margin-bottom:0">
+          <input class="input-box" type="number" step="0.01" min="0" value="${pr.revenue}"
+            oninput="app.setPricingNum('revenue', this.value)" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-bar">
+          <span class="section-heading">Suas despesas fixas</span>
+          <button class="link-gold" onclick="app.addPricingRow('fixed')">+ Despesa</button>
+        </div>
+        ${this.pricingRows('fixed', 'R$')}
+        <div class="pr-total"><span>Total</span><strong id="pricingFixedTotal"></strong></div>
       </div>
     `;
   },
 
-  recalcPricing() {
-    const cost = parseFloat(document.getElementById('calcCost')?.value) || 0;
-    const tax = parseFloat(document.getElementById('calcTax')?.value) || 0;
-    const fixed = parseFloat(document.getElementById('calcFixed')?.value) || 0;
-    const margin = parseFloat(document.getElementById('calcMargin')?.value) || 0;
-    const totalPct = (tax + fixed + margin) / 100;
-    const box = document.getElementById('pricingResultBox');
-    if (!box) return;
+  setPricingRow(list, i, field, val) {
+    const row = this.getPricing()[list][i];
+    row[field] = field === 'value' ? (parseFloat(val) || 0) : val;
+    this.saveState();
+    this.recalcPricing();
+  },
 
-    if (totalPct >= 0.95) {
-      box.innerHTML = `<span style="font-size:12px;color:var(--danger)">Reduza os percentuais para calcular.</span>`;
+  setPricingNum(field, val) {
+    this.getPricing()[field] = parseFloat(val) || 0;
+    this.saveState();
+    this.recalcPricing();
+  },
+
+  addPricingRow(list) {
+    this.getPricing()[list].push({ name: '', value: 0 });
+    this.saveState();
+    this.navigate('precificacao');
+  },
+
+  removePricingRow(list, i) {
+    this.getPricing()[list].splice(i, 1);
+    this.saveState();
+    this.navigate('precificacao');
+  },
+
+  recalcPricing() {
+    const hero = document.getElementById('pricingHero');
+    if (!hero) return;
+    const pr = this.getPricing();
+    const sum = list => list.reduce((t, r) => t + (parseFloat(r.value) || 0), 0);
+
+    const fichaTotal = sum(pr.ficha);
+    const fixedTotal = sum(pr.fixed);
+    const fixedPct = pr.revenue > 0 ? (fixedTotal / pr.revenue) * 100 : 0;
+    const totalPct = pr.card + pr.tax + fixedPct + pr.profit + pr.invest;
+    const pct = n => `${n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`;
+
+    document.getElementById('pricingFichaTotal').textContent = this.formatBRL(fichaTotal);
+    document.getElementById('pricingFixedTotal').textContent = this.formatBRL(fixedTotal);
+    document.getElementById('pricingFixedPct').textContent = pct(fixedPct);
+    document.getElementById('pricingPctTotal').textContent = pct(totalPct);
+
+    const list = document.getElementById('pricingList');
+    if (totalPct >= 100) {
+      hero.innerHTML = `
+        <span class="summary-label">Seu markup</span>
+        <div class="summary-value" style="color:var(--danger);margin:4px 0 4px">—</div>
+        <span style="font-size:12.5px;color:var(--danger)">A soma dos percentuais (${pct(totalPct)}) precisa ficar abaixo de 100%.</span>`;
+      list.innerHTML = '';
       return;
     }
-    const price = cost / (1 - totalPct);
-    const profit = price * (margin / 100);
-    const markup = cost > 0 ? (price / cost).toFixed(2) : '0.00';
-    const roi = cost > 0 ? ((profit / cost) * 100).toFixed(0) : '0';
 
-    box.innerHTML = `
-      <span class="summary-label">Preço de Venda Sugerido</span>
-      <div class="summary-value" style="color:var(--gold);margin:4px 0 10px">${this.formatBRL(price)}</div>
-      <div class="summary-grid" style="padding-top:8px;border-top:1px solid var(--border-line)">
-        <div class="summary-col">
-          <span>Lucro Líquido</span>
-          <strong>${this.formatBRL(profit)}</strong>
-        </div>
-        <div class="summary-col">
-          <span>Rentab. (ROI)</span>
-          <strong style="color:var(--gold)">+${roi}%</strong>
-        </div>
-        <div class="summary-col">
-          <span>Markup</span>
-          <strong>${markup}x</strong>
-        </div>
-      </div>
-    `;
+    const markup = 1 / (1 - totalPct / 100);
+    hero.innerHTML = `
+      <span class="summary-label">Seu markup</span>
+      <div class="summary-value" style="margin:4px 0 10px">${markup.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</div>
+      <div class="summary-grid" style="padding-top:8px">
+        <div class="summary-col"><span>Percentuais</span><strong>${pct(totalPct)}</strong></div>
+        <div class="summary-col"><span>Ficha técnica</span><strong>${this.formatBRL(fichaTotal)}</strong></div>
+        <div class="summary-col"><span>Desp. fixas</span><strong>${pct(fixedPct)}</strong></div>
+      </div>`;
+
+    list.innerHTML = pr.products.map(r => {
+      const base = (parseFloat(r.value) || 0) + fichaTotal;
+      return `
+        <div class="row-card">
+          <div class="row-main">
+            <strong>${this.esc(r.name || '—')}</strong>
+            <span>Custo ${this.formatBRL(parseFloat(r.value) || 0)} + ficha ${this.formatBRL(fichaTotal)}</span>
+          </div>
+          <div class="row-side">
+            <span>Preço de venda ideal</span>
+            <strong style="color:var(--gold)">${this.formatBRL(base * markup)}</strong>
+          </div>
+        </div>`;
+    }).join('') || '<span class="pr-hint">Adicione produtos para calcular.</span>';
   },
 
   /* ==================== 10. ACADEMY ==================== */
