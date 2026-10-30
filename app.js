@@ -771,6 +771,8 @@ const app = {
     if (this.cart.length === 0 && this.state.products.length > 0) {
       this.cart = [{ productId: this.state.products[0].id, qty: 1 }];
     }
+    this._pickerOpen = false;
+    this._newClientOpen = false;
     this.renderNewSaleModalContent();
     document.getElementById('saleModalOverlay').classList.add('open');
   },
@@ -796,16 +798,7 @@ const app = {
     const methods = ['PIX', 'Cartão de Crédito', 'Cartão de Débito', 'Dinheiro'];
 
     document.getElementById('saleModalBody').innerHTML = `
-      <div class="field-group">
-        <label>Cliente</label>
-        <select class="select-box" onchange="app.selectedClientForSale = this.value">
-          ${this.state.clients.map(c => `
-            <option value="${c.id}" ${c.id === this.selectedClientForSale ? 'selected' : ''}>
-              ${c.name} (${c.tier})
-            </option>
-          `).join('')}
-        </select>
-      </div>
+      ${this.renderClientPicker()}
 
       <div class="field-group">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -869,6 +862,88 @@ const app = {
         <button class="btn-gold" style="width:auto;padding:11px 20px" onclick="app.confirmNewSale()">Concluir Venda</button>
       </div>
     `;
+  },
+
+  renderClientPicker() {
+    const clients = this.state.clients;
+    const sel = clients.find(c => c.id === this.selectedClientForSale) || clients[0] || { name: 'Selecione um cliente', tier: '' };
+    const chevron = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${this._pickerOpen ? 180 : 0}deg)"><polyline points="6 9 12 15 18 9"/></svg>`;
+    const check = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const tiers = ['Cliente', 'Plano VIP', 'Gold'];
+
+    return `
+      <div class="field-group">
+        <label>Cliente</label>
+        <div class="pick-group">
+          <button class="pick-current" onclick="app.toggleClientPicker()">
+            <span><strong>${this.esc(sel.name)}</strong><small>${this.esc(sel.tier)}</small></span>
+            ${chevron}
+          </button>
+          ${this._pickerOpen ? `
+            <div class="pick-list">
+              ${clients.map(c => `
+                <button class="pick-item ${c.id === sel.id ? 'selected' : ''}" onclick="app.pickClient('${c.id}')">
+                  <span>${this.esc(c.name)}<small>${this.esc(c.tier)}</small></span>
+                  ${c.id === sel.id ? check : ''}
+                </button>`).join('')}
+              <button class="pick-item pick-new" onclick="app.toggleInlineClient()">
+                <span>${this._newClientOpen ? '− Cancelar novo cliente' : '+ Novo cliente'}</span>
+              </button>
+              ${this._newClientOpen ? `
+                <div class="pick-form">
+                  <input id="scName" class="input-box" placeholder="Nome do cliente" />
+                  <input id="scPhone" class="input-box" placeholder="WhatsApp (31) 99999-0000" inputmode="tel" />
+                  <div class="segmented-control" style="align-self:flex-start">
+                    ${tiers.map(t => `<button class="seg-btn ${t === (this._newTier || 'Cliente') ? 'active' : ''}" onclick="app.setInlineTier(this, '${t}')">${t}</button>`).join('')}
+                  </div>
+                  <button class="btn-gold" onclick="app.saveInlineClient()">Cadastrar e selecionar</button>
+                </div>` : ''}
+            </div>` : ''}
+        </div>
+      </div>`;
+  },
+
+  toggleClientPicker() {
+    this._pickerOpen = !this._pickerOpen;
+    if (!this._pickerOpen) this._newClientOpen = false;
+    this.renderNewSaleModalContent();
+  },
+
+  pickClient(id) {
+    this.selectedClientForSale = id;
+    this._pickerOpen = false;
+    this._newClientOpen = false;
+    this.renderNewSaleModalContent();
+  },
+
+  toggleInlineClient() {
+    this._newClientOpen = !this._newClientOpen;
+    this._newTier = 'Cliente';
+    this.renderNewSaleModalContent();
+  },
+
+  setInlineTier(btn, tier) {
+    this._newTier = tier;
+    btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+  },
+
+  saveInlineClient() {
+    const name = document.getElementById('scName').value.trim();
+    if (!name) return this.showToast('Informe o nome do cliente');
+    const id = `c-${Date.now()}`;
+    this.state.clients.push({
+      id,
+      name,
+      tier: this._newTier || 'Cliente',
+      phone: document.getElementById('scPhone').value.trim() || '(31) 99000-0000',
+      email: 'cliente@ngdconcept.com.br',
+      city: 'Belo Horizonte, MG',
+      notes: 'Cadastrado durante a venda.',
+      since: '2026'
+    });
+    this.saveState();
+    this.showToast('Cliente cadastrado');
+    this.pickClient(id);
   },
 
   addCartItem() {
