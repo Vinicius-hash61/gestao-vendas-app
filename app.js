@@ -149,6 +149,7 @@ const app = {
     this.setTheme(savedTheme, false);
     this.updateBadges();
     this.navigate('dashboard');
+    this.loadReelFiles();
   },
 
   setTheme(themeName, notify = true) {
@@ -1392,6 +1393,44 @@ const app = {
     return this.state.reels;
   },
 
+  /* Vídeos enviados do aparelho ficam no IndexedDB (localStorage não comporta arquivos grandes) */
+  _blobUrls: {},
+
+  reelDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('ngd_reels', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('videos');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async reelFileOp(mode, id, blob) {
+    const db = await this.reelDb();
+    return new Promise((resolve, reject) => {
+      const store = db.transaction('videos', mode === 'get' ? 'readonly' : 'readwrite').objectStore('videos');
+      const req = mode === 'put' ? store.put(blob, id) : mode === 'delete' ? store.delete(id) : store.get(id);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async loadReelFiles() {
+    try {
+      for (const r of this.getReels()) {
+        if (r.fileId && !this._blobUrls[r.fileId]) {
+          const blob = await this.reelFileOp('get', r.fileId);
+          if (blob) this._blobUrls[r.fileId] = URL.createObjectURL(blob);
+        }
+      }
+      if (this.currentScreen === 'academy') this.navigate('academy');
+    } catch (e) { /* IndexedDB indisponível: vídeos por arquivo não serão carregados */ }
+  },
+
+  reelSrc(r) {
+    return r.fileId ? (this._blobUrls[r.fileId] || '') : (r.src || '');
+  },
+
   youtubeId(url) {
     const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{11})/);
     return m ? m[1] : null;
@@ -1419,12 +1458,13 @@ const app = {
   },
 
   renderReel(r, i) {
-    const yt = r.src ? this.youtubeId(r.src) : null;
+    const srcUrl = this.reelSrc(r);
+    const yt = r.fileId ? null : (srcUrl ? this.youtubeId(srcUrl) : null);
     let media;
     if (yt) {
       media = `<iframe class="reel-media" data-src="https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt}&playsinline=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    } else if (r.src) {
-      media = `<video class="reel-media" src="${this.esc(r.src)}" playsinline muted preload="metadata"
+    } else if (srcUrl) {
+      media = `<video class="reel-media" src="${this.esc(srcUrl)}" playsinline muted preload="metadata"
         onclick="app.toggleReelPlay(this)" ontimeupdate="app.reelProgress(this)" onended="app.reelEnded(this)"></video>`;
     } else {
       const hues = [210, 265, 330, 150, 30];
@@ -1438,7 +1478,7 @@ const app = {
         <div class="reel-shade"></div>
         <div class="reel-progress"><i></i></div>
 
-        ${r.src && !yt ? `
+        ${srcUrl && !yt ? `
         <div class="reel-rail">
           <button class="reel-round" onclick="app.toggleReelMute(this)" title="Som">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line class="mute-x" x1="23" y1="9" x2="17" y2="15"/><line class="mute-x" x1="17" y1="9" x2="23" y2="15"/></svg>
@@ -1539,7 +1579,11 @@ const app = {
         <input id="rvTitle" class="input-box" placeholder="Ex: Como fechar venda no Direct" />
       </div>
       <div class="field-group">
-        <label>Link do vídeo (.mp4 ou YouTube)</label>
+        <label>Enviar vídeo do aparelho</label>
+        <input id="rvFile" type="file" accept="video/*" class="input-box" />
+      </div>
+      <div class="field-group">
+        <label>ou colar o link do vídeo (.mp4 ou YouTube)</label>
         <input id="rvSrc" class="input-box" placeholder="https://..." />
       </div>
       <div class="field-group">
@@ -1575,7 +1619,7 @@ const app = {
     document.getElementById('genericModalOverlay').classList.add('open');
   },
 
-  saveReel() {
+  async saveReel() {
     const val = id => document.getElementById(id).value.trim();
     const title = val('rvTitle');
     const src = val('rvSrc');
@@ -1584,12 +1628,26 @@ const app = {
     if (src && !/^https?:\/\//i.test(src)) return this.showToast('O link do vídeo deve começar com http(s)://');
     if (ctaUrl && !/^https?:\/\//i.test(ctaUrl)) return this.showToast('O link de adesão deve começar com http(s)://');
 
+    const file = document.getElementById('rvFile').files[0];
+    const id = `r-${Date.now()}`;
+    let fileId = '';
+    if (file) {
+      try {
+        await this.reelFileOp('put', id, file);
+        this._blobUrls[id] = URL.createObjectURL(file);
+        fileId = id;
+      } catch (e) {
+        return this.showToast('Não foi possível salvar o arquivo neste navegador');
+      }
+    }
+
     this.getReels().unshift({
-      id: `r-${Date.now()}`,
+      id,
       title,
       caption: val('rvCaption'),
       area: val('rvArea') || 'Curso',
-      src,
+      src: fileId ? '' : src,
+      fileId,
       ctaUrl,
       ctaLabel: val('rvLabel') || 'Quero aderir ao curso',
       ctaClicks: 0
@@ -1601,7 +1659,12 @@ const app = {
   },
 
   removeReel(i) {
-    this.getReels().splice(i, 1);
+    const [gone] = this.getReels().splice(i, 1);
+    if (gone && gone.fileId) {
+      this.reelFileOp('delete', gone.fileId).catch(() => {});
+      URL.revokeObjectURL(this._blobUrls[gone.fileId]);
+      delete this._blobUrls[gone.fileId];
+    }
     this.saveState();
     this.openReelsManager();
     this.navigate('academy');
