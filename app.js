@@ -120,10 +120,11 @@ const initialData = {
     { id: 'l2', name: 'Pedro Henrique BH', tag: 'Plano VIP', phone: '(31) 99311-4090', value: 489.90, status: 'Em Negociação', action: 'Aguardando link de pagamento Conjunto Street' },
     { id: 'l3', name: 'Thiago Mendes (SP)', tag: 'Envio Brasil', phone: '(11) 97612-8800', value: 659.80, status: 'Cotação Frete', action: 'Enviar código de rastreio após confirmação' }
   ],
-  academy: [
-    { title: 'Posicionamento de Marca e Peças Exclusivas', duration: '14 min', progress: 100, area: 'Branding' },
-    { title: 'Atendimento Plano VIP e Conversão no Direct', duration: '18 min', progress: 70, area: 'Vendas' },
-    { title: 'Gestão de Grade e Giro de Estoque na Moda', duration: '12 min', progress: 35, area: 'Estoque' }
+  // Vídeos de exemplo (sem src): publique os seus em Academy > "+ Vídeo".
+  reels: [
+    { id: 'r1', title: 'Como vender mais no Direct', caption: 'O passo a passo do atendimento que converte conversa em venda.', area: 'Vendas', src: '', ctaUrl: '', ctaLabel: 'Quero aderir ao curso', ctaClicks: 0 },
+    { id: 'r2', title: 'Posicionamento de marca streetwear', caption: 'Como construir desejo em torno das peças exclusivas.', area: 'Branding', src: '', ctaUrl: '', ctaLabel: 'Quero aderir ao curso', ctaClicks: 0 },
+    { id: 'r3', title: 'Giro de estoque na moda', caption: 'Grade, reposição e margem sem dinheiro parado.', area: 'Estoque', src: '', ctaUrl: '', ctaLabel: 'Quero aderir ao curso', ctaClicks: 0 }
   ],
   news: [
     { category: 'Coleção', title: 'Peças Oversized e conjuntos monocromáticos lideram pedidos no mês', date: 'Hoje', text: 'Clientes do Plano VIP responderam por 62% da saída das peças limitadas na primeira semana.' },
@@ -407,7 +408,7 @@ const app = {
       crm: ['RELACIONAMENTO', 'CRM & Plano VIP'],
       metas: ['DESEMPENHO MENSAL', 'Metas'],
       precificacao: ['MARGEM & MARKUP', 'Precificação'],
-      academy: ['TREINAMENTO', 'Academy'],
+      academy: ['CURSOS NGD', 'Academy'],
       news: ['COMUNICADOS', 'News'],
       ajuda: ['SUPORTE', 'Ajuda']
     };
@@ -418,6 +419,7 @@ const app = {
 
     const vp = document.getElementById('appViewport');
     vp.scrollTop = 0;
+    vp.classList.toggle('reels-mode', screen === 'academy');
 
     switch (screen) {
       case 'dashboard': vp.innerHTML = this.renderDashboard(); break;
@@ -1379,24 +1381,231 @@ const app = {
   },
 
   /* ==================== 10. ACADEMY ==================== */
+  esc(v) {
+    return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  },
+
+  getReels() {
+    if (!Array.isArray(this.state.reels)) {
+      this.state.reels = JSON.parse(JSON.stringify(initialData.reels));
+    }
+    return this.state.reels;
+  },
+
+  youtubeId(url) {
+    const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{11})/);
+    return m ? m[1] : null;
+  },
+
   renderAcademy() {
+    const reels = this.getReels();
+    setTimeout(() => this.initReels(), 0);
+
+    if (!reels.length) {
+      return `
+        <div class="reels-empty">
+          <strong>Nenhum vídeo publicado</strong>
+          <span>Publique vídeos do seu curso para os vendedores assistirem e aderirem.</span>
+          <button class="btn-gold" style="width:auto" onclick="app.openReelsManager()">+ Publicar vídeo</button>
+        </div>`;
+    }
+
     return `
-      <div class="list-stack">
-        ${this.state.academy.map(item => `
-          <div class="card clickable" onclick="app.showToast('Reproduzindo: ${item.title}')">
-            <div class="section-bar" style="margin-bottom:6px">
-              <span class="tag tag-gold">${item.area}</span>
-              <span style="font-size:11.5px;color:var(--text-muted)">${item.duration}</span>
-            </div>
-            <strong style="font-size:13.5px;display:block">${item.title}</strong>
-            <div class="bar-progress">
-              <div class="bar-progress-fill" style="width:${item.progress}%"></div>
-            </div>
-            <span style="font-size:11px;color:var(--text-muted)">${item.progress}% concluído</span>
-          </div>
-        `).join('')}
+      <div class="reels-feed" id="reelsFeed">
+        <button class="reels-add" onclick="app.openReelsManager()">+ Vídeo</button>
+        ${reels.map((r, i) => this.renderReel(r, i)).join('')}
       </div>
     `;
+  },
+
+  renderReel(r, i) {
+    const yt = r.src ? this.youtubeId(r.src) : null;
+    let media;
+    if (yt) {
+      media = `<iframe class="reel-media" data-src="https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt}&playsinline=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    } else if (r.src) {
+      media = `<video class="reel-media" src="${this.esc(r.src)}" playsinline muted preload="metadata"
+        onclick="app.toggleReelPlay(this)" ontimeupdate="app.reelProgress(this)" onended="app.reelEnded(this)"></video>`;
+    } else {
+      const hues = [210, 265, 330, 150, 30];
+      media = `<div class="reel-media reel-poster" style="--h:${hues[i % hues.length]}">
+        <span>Vídeo de exemplo<br><small>Toque em "+ Vídeo" para publicar o seu</small></span></div>`;
+    }
+
+    return `
+      <section class="reel" data-index="${i}">
+        ${media}
+        <div class="reel-shade"></div>
+        <div class="reel-progress"><i></i></div>
+
+        ${r.src && !yt ? `
+        <div class="reel-rail">
+          <button class="reel-round" onclick="app.toggleReelMute(this)" title="Som">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line class="mute-x" x1="23" y1="9" x2="17" y2="15"/><line class="mute-x" x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+        </div>` : ''}
+
+        <div class="reel-info">
+          <span class="tag">${this.esc(r.area || 'Curso')}</span>
+          <strong>${this.esc(r.title)}</strong>
+          <p>${this.esc(r.caption || '')}</p>
+          <button class="reel-cta" onclick="app.openReelCta(${i})">
+            ${this.esc(r.ctaLabel || 'Quero aderir ao curso')}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="reel-end">
+          <strong>Quer dominar esse assunto?</strong>
+          <span>Continue na plataforma e faça a adesão ao curso.</span>
+          <button class="reel-cta" onclick="app.openReelCta(${i})">${this.esc(r.ctaLabel || 'Quero aderir ao curso')}</button>
+          <button class="reel-replay" onclick="app.replayReel(this)">Assistir novamente</button>
+        </div>
+      </section>
+    `;
+  },
+
+  initReels() {
+    const feed = document.getElementById('reelsFeed');
+    if (this._reelObs) this._reelObs.disconnect();
+    if (!feed) return;
+
+    this._reelObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const reel = e.target;
+        const v = reel.querySelector('video');
+        const f = reel.querySelector('iframe');
+        if (e.isIntersecting && e.intersectionRatio >= 0.6) {
+          reel.classList.remove('ended');
+          if (v) {
+            v.muted = this._reelMuted !== false;
+            v.play().catch(() => {});
+          }
+          if (f && !f.getAttribute('src')) f.setAttribute('src', f.dataset.src);
+        } else {
+          if (v) v.pause();
+          if (f) f.removeAttribute('src');
+        }
+      });
+    }, { root: feed, threshold: [0, 0.6] });
+
+    feed.querySelectorAll('.reel').forEach(r => this._reelObs.observe(r));
+  },
+
+  toggleReelPlay(v) {
+    if (v.paused) v.play().catch(() => {}); else v.pause();
+  },
+
+  toggleReelMute(btn) {
+    this._reelMuted = this._reelMuted === false;
+    document.querySelectorAll('.reel video').forEach(v => { v.muted = this._reelMuted; });
+    document.querySelectorAll('.reel-round').forEach(b => b.classList.toggle('sound-on', this._reelMuted === false));
+  },
+
+  reelProgress(v) {
+    const bar = v.parentElement.querySelector('.reel-progress i');
+    if (bar && v.duration) bar.style.width = `${(v.currentTime / v.duration) * 100}%`;
+  },
+
+  reelEnded(v) {
+    v.parentElement.classList.add('ended');
+  },
+
+  replayReel(btn) {
+    const reel = btn.closest('.reel');
+    reel.classList.remove('ended');
+    const v = reel.querySelector('video');
+    if (v) { v.currentTime = 0; v.play().catch(() => {}); }
+  },
+
+  openReelCta(i) {
+    const r = this.getReels()[i];
+    if (!r) return;
+    if (!/^https?:\/\//i.test(r.ctaUrl || '')) {
+      return this.showToast('Este vídeo ainda não tem link de adesão');
+    }
+    r.ctaClicks = (r.ctaClicks || 0) + 1;
+    this.saveState();
+    window.open(r.ctaUrl, '_blank', 'noopener');
+  },
+
+  openReelsManager() {
+    const reels = this.getReels();
+    const lastUrl = reels.map(r => r.ctaUrl).filter(Boolean).pop() || '';
+    document.getElementById('genericModalTitle').textContent = 'Vídeos do Academy';
+    document.getElementById('genericModalBody').innerHTML = `
+      <div class="field-group">
+        <label>Título</label>
+        <input id="rvTitle" class="input-box" placeholder="Ex: Como fechar venda no Direct" />
+      </div>
+      <div class="field-group">
+        <label>Link do vídeo (.mp4 ou YouTube)</label>
+        <input id="rvSrc" class="input-box" placeholder="https://..." />
+      </div>
+      <div class="field-group">
+        <label>Legenda</label>
+        <input id="rvCaption" class="input-box" placeholder="Resumo curto do vídeo" />
+      </div>
+      <div class="grid-2">
+        <div class="field-group">
+          <label>Categoria</label>
+          <input id="rvArea" class="input-box" value="Vendas" />
+        </div>
+        <div class="field-group">
+          <label>Texto do botão</label>
+          <input id="rvLabel" class="input-box" value="Quero aderir ao curso" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Link da plataforma de adesão</label>
+        <input id="rvCta" class="input-box" value="${this.esc(lastUrl)}" placeholder="https://sua-plataforma.com/curso" />
+      </div>
+      <button class="btn-gold" onclick="app.saveReel()">Publicar vídeo</button>
+
+      ${reels.length ? `<span class="pres-section-title" style="margin-top:6px">Publicados</span>` : ''}
+      ${reels.map((r, i) => `
+        <div class="row-card">
+          <div class="row-main">
+            <strong>${this.esc(r.title)}</strong>
+            <span>${this.esc(r.area || '')} • ${r.ctaClicks || 0} cliques na adesão</span>
+          </div>
+          <button class="btn-outline" style="color:var(--danger)" onclick="app.removeReel(${i})">Remover</button>
+        </div>`).join('')}
+    `;
+    document.getElementById('genericModalOverlay').classList.add('open');
+  },
+
+  saveReel() {
+    const val = id => document.getElementById(id).value.trim();
+    const title = val('rvTitle');
+    const src = val('rvSrc');
+    const ctaUrl = val('rvCta');
+    if (!title) return this.showToast('Informe o título do vídeo');
+    if (src && !/^https?:\/\//i.test(src)) return this.showToast('O link do vídeo deve começar com http(s)://');
+    if (ctaUrl && !/^https?:\/\//i.test(ctaUrl)) return this.showToast('O link de adesão deve começar com http(s)://');
+
+    this.getReels().unshift({
+      id: `r-${Date.now()}`,
+      title,
+      caption: val('rvCaption'),
+      area: val('rvArea') || 'Curso',
+      src,
+      ctaUrl,
+      ctaLabel: val('rvLabel') || 'Quero aderir ao curso',
+      ctaClicks: 0
+    });
+    this.saveState();
+    this.closeGenericModal();
+    this.showToast('Vídeo publicado no Academy');
+    this.navigate('academy');
+  },
+
+  removeReel(i) {
+    this.getReels().splice(i, 1);
+    this.saveState();
+    this.openReelsManager();
+    this.navigate('academy');
+    document.getElementById('genericModalOverlay').classList.add('open');
   },
 
   /* ==================== 11. NEWS ==================== */

@@ -100,9 +100,9 @@ button, input, select, textarea {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--gold);
-  background: var(--gold-tint);
-  border: 1px solid var(--gold-border);
+  color: var(--text-muted);
+  background: var(--bg-card-subtle);
+  border: none;
   padding: 3px 9px;
   border-radius: 99px;
   margin-bottom: 4px;
@@ -514,9 +514,8 @@ button, input, select, textarea {
 }
 
 .drawer-tag.gold {
-  background: var(--gold-tint);
-  color: var(--gold);
-  border-color: var(--gold-border);
+  background: var(--bg-card-subtle);
+  color: var(--text-muted);
 }
 
 .drawer-footer {
@@ -664,7 +663,7 @@ button, input, select, textarea {
 }
 
 .analytics-kpi-box.gold-highlight {
-  background: var(--gold-tint);
+  background: var(--bg-card);
 }
 
 .kpi-label {
@@ -891,14 +890,14 @@ button, input, select, textarea {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--gold-tint);
+  background: var(--bg-card-subtle);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -961,9 +960,8 @@ button, input, select, textarea {
 }
 
 .tag-gold {
-  background: var(--gold-tint);
-  color: var(--gold);
-  border-color: var(--gold-border);
+  background: var(--bg-card-subtle);
+  color: var(--text-muted);
 }
 
 .tag-success {
@@ -1115,8 +1113,8 @@ button, input, select, textarea {
 
 .pay-tile.selected {
   border-color: var(--gold);
-  background: var(--gold-tint);
-  color: var(--gold);
+  background: var(--bg-card-subtle);
+  color: var(--text-main);
 }
 
 .stepper {
@@ -1251,4 +1249,233 @@ button, input, select, textarea {
     border-radius: 0;
     border: none;
   }
+}
+
+/* Academy — feed vertical estilo Reels */
+.app-viewport.reels-mode {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.reels-feed {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  background: #000;
+}
+
+.reels-feed::-webkit-scrollbar {
+  display: none;
+}
+
+.reel {
+  position: relative;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+}
+
+.reel-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+
+.reel-poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(160deg, hsl(var(--h) 70% 38%), hsl(calc(var(--h) + 40) 60% 14%));
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.reel-poster small {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.reel-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0) 55%);
+}
+
+.reel-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 82px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.reel-progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #fff;
+}
+
+.reel-info {
+  position: absolute;
+  left: 16px;
+  right: 64px;
+  bottom: 98px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.reel-info .tag {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.reel-info strong {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.reel-info p {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.reel-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 99px;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reel-cta:active {
+  opacity: 0.7;
+}
+
+.reel-rail {
+  position: absolute;
+  right: 12px;
+  bottom: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reel-round {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.reel-round.sound-on .mute-x {
+  display: none;
+}
+
+.reel-end {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.reel.ended .reel-end {
+  display: flex;
+}
+
+.reel-end strong {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.reel-end span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.reel-replay {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.reels-add {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 5;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reels-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.reels-empty strong {
+  color: var(--text-main);
+  font-size: 17px;
 }
