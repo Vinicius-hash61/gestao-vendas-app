@@ -1,40 +1,40 @@
 /* Apple HIG-inspired themes (iOS system colors).
    Variable names (--gold*) are kept as the accent hook used across app.js. */
 :root[data-theme="black-gold"] {
-  --bg-outer: #000000;
-  --bg-phone: #000000;
-  --bg-card: #1c1c1e;
-  --bg-card-subtle: #2c2c2e;
-  --bg-nav: rgba(28, 28, 30, 0.82);
+  --bg-outer: #050308;
+  --bg-phone: #050308;
+  --bg-card: #130e1d;
+  --bg-card-subtle: #1f1730;
+  --bg-nav: rgba(19, 14, 29, 0.82);
   --text-main: #ffffff;
-  --text-muted: #8e8e93;
-  --gold: #0a84ff;
-  --gold-hover: #409cff;
+  --text-muted: #9a8fb0;
+  --gold: #a855f7;
+  --gold-hover: #c084fc;
   --gold-text-on-fill: #ffffff;
-  --gold-tint: rgba(10, 132, 255, 0.16);
-  --gold-border: rgba(10, 132, 255, 0);
-  --border-line: rgba(84, 84, 88, 0.45);
-  --border-strong: rgba(84, 84, 88, 0.65);
+  --gold-tint: rgba(168, 85, 247, 0.18);
+  --gold-border: rgba(168, 85, 247, 0);
+  --border-line: rgba(140, 110, 190, 0.22);
+  --border-strong: rgba(140, 110, 190, 0.38);
   --danger: #ff453a;
   --danger-tint: rgba(255, 69, 58, 0.16);
   --success: #30d158;
   --success-tint: rgba(48, 209, 88, 0.16);
-  --frame-border: #1c1c1e;
+  --frame-border: #1a1228;
 }
 
 :root[data-theme="white-gold"] {
-  --bg-outer: #e5e5ea;
-  --bg-phone: #f2f2f7;
+  --bg-outer: #e7e1f0;
+  --bg-phone: #f4f0fa;
   --bg-card: #ffffff;
-  --bg-card-subtle: #e9e9ee;
-  --bg-nav: rgba(249, 249, 249, 0.82);
+  --bg-card-subtle: #ece5f7;
+  --bg-nav: rgba(250, 247, 255, 0.82);
   --text-main: #000000;
-  --text-muted: #6c6c70;
-  --gold: #007aff;
-  --gold-hover: #0062cc;
+  --text-muted: #6b6080;
+  --gold: #7e22ce;
+  --gold-hover: #6b21a8;
   --gold-text-on-fill: #ffffff;
-  --gold-tint: rgba(0, 122, 255, 0.12);
-  --gold-border: rgba(0, 122, 255, 0);
+  --gold-tint: rgba(126, 34, 206, 0.12);
+  --gold-border: rgba(126, 34, 206, 0);
   --border-line: rgba(60, 60, 67, 0.18);
   --border-strong: rgba(60, 60, 67, 0.29);
   --danger: #ff3b30;
@@ -176,12 +176,12 @@ button, input, select, textarea {
 
 .swatch-black {
   background: #0a0a0a;
-  border: 2px solid #0a84ff;
+  border: 2px solid #a855f7;
 }
 
 .swatch-white {
   background: #ffffff;
-  border: 2px solid #007aff;
+  border: 2px solid #7e22ce;
 }
 
 .jump-grid {
@@ -223,7 +223,7 @@ button, input, select, textarea {
   height: 42px;
   border-radius: 50%;
   background: #000000;
-  border: 1.5px solid #8e8e93;
+  border: 1.5px solid #a855f7;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -584,7 +584,7 @@ button, input, select, textarea {
 }
 
 :root[data-theme="black-gold"] .seg-btn.active {
-  background: #636366;
+  background: #4c3a6b;
 }
 
 /* Hero Financial Panel */
@@ -1033,7 +1033,7 @@ button, input, select, textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.4);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.45);
 }
 
 .center-btn-label {
@@ -1485,8 +1485,8 @@ button, input, select, textarea {
   border-radius: 24px;
   padding: 22px 20px 18px;
   color: #fff;
-  background: linear-gradient(145deg, #0a84ff 0%, #5e5ce6 100%);
-  box-shadow: 0 10px 28px rgba(10, 132, 255, 0.28);
+  background: linear-gradient(145deg, #8b5cf6 0%, #3b0764 100%);
+  box-shadow: 0 10px 28px rgba(139, 92, 246, 0.3);
 }
 
 .pr-hero-error {
@@ -1733,4 +1733,12 @@ button, input, select, textarea {
 
 .pr-line > strong {
   font-weight: 600;
+}
+
+.ngd-logo-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }

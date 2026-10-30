@@ -1,5 +1,5 @@
 const initialData = {
-  storeName: 'NGD CONCEPT',
+  storeName: 'GHOST',
   instagram: '@ngdconceptbh',
   city: 'Belo Horizonte, MG',
   monthlyGoal: 45000,
@@ -400,7 +400,7 @@ const app = {
     });
 
     const headers = {
-      dashboard: ['NGD CONCEPT • BH', 'Dashboard'],
+      dashboard: ['GHOST', 'Dashboard'],
       vendas: ['HISTÓRICO COMERCIAL', 'Vendas'],
       fluxo: ['FINANCEIRO', 'Fluxo de Caixa'],
       ajuste: ['PREFERÊNCIAS', 'Ajustes'],
@@ -414,7 +414,7 @@ const app = {
       ajuda: ['SUPORTE', 'Ajuda']
     };
 
-    const [sub, title] = headers[screen] || ['NGD CONCEPT', 'Gestão'];
+    const [sub, title] = headers[screen] || ['GHOST', 'Gestão'];
     document.getElementById('headerSubtitle').textContent = sub;
     document.getElementById('headerTitle').textContent = title;
 
@@ -1107,7 +1107,7 @@ const app = {
     document.getElementById('genericModalBody').innerHTML = `
       <div class="field-group">
         <label>Nome da Peça</label>
-        <input id="npName" class="input-box" placeholder="Ex: Camisa Linho NGD Concept" />
+        <input id="npName" class="input-box" placeholder="Ex: Camisa Linho Ghost" />
       </div>
       <div class="grid-2">
         <div class="field-group">
@@ -1812,7 +1812,7 @@ const app = {
   renderAjuda() {
     return `
       <div class="card">
-        <strong style="font-size:14px;display:block;margin-bottom:6px">Suporte Operacional NGD Concept</strong>
+        <strong style="font-size:14px;display:block;margin-bottom:6px">Suporte Operacional Ghost</strong>
         <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px">
           Canal direto para suporte de vendas, envios e operação de loja.
         </p>

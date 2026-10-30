@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>NGD Concept — Apresentação do Aplicativo</title>
+  <title>Ghost — Gestão de Vendas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="icon" href="logo.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -14,13 +15,10 @@
     <!-- Left Presentation Panel -->
     <aside class="presentation-panel">
       <div class="pres-brand-row">
-        <div class="ngd-logo-circle lg">
-          <span class="ngd-letters">NGD</span>
-          <span class="ngd-script">concept</span>
-        </div>
+        <div class="ngd-logo-circle lg"><img src="logo.png" alt="Ghost" /></div>
         <div>
           <span class="pres-badge">Apresentação Executiva</span>
-          <h1>NGD Concept App</h1>
+          <h1>Ghost App</h1>
           <p class="pres-sub">@ngdconceptbh • Belo Horizonte • Desde 2019</p>
         </div>
       </div>
@@ -72,7 +70,7 @@
             Calculadora Precificação
           </button>
           <button onclick="app.navigate('academy')" class="jump-btn" data-pres="academy">
-            NGD Academy
+            Academy
           </button>
           <button onclick="app.navigate('news')" class="jump-btn" data-pres="news">
             News &amp; Avisos
@@ -107,7 +105,7 @@
         </button>
 
         <div class="header-center">
-          <span class="header-eyebrow" id="headerSubtitle">NGD CONCEPT • BH</span>
+          <span class="header-eyebrow" id="headerSubtitle">GHOST</span>
           <h2 class="header-title" id="headerTitle">Dashboard</h2>
         </div>
 
@@ -137,12 +135,9 @@
       <div class="drawer-backdrop" id="drawerBackdrop" onclick="app.closeDrawer()"></div>
       <nav class="side-drawer" id="sideDrawer">
         <div class="drawer-brand">
-          <div class="ngd-logo-circle">
-            <span class="ngd-letters">NGD</span>
-            <span class="ngd-script">concept</span>
-          </div>
+          <div class="ngd-logo-circle"><img src="logo.png" alt="Ghost" /></div>
           <div class="drawer-brand-info">
-            <strong>NGD CONCEPT</strong>
+            <strong>GHOST</strong>
             <span>@ngdconceptbh • BH</span>
           </div>
           <button class="drawer-close" onclick="app.closeDrawer()">
