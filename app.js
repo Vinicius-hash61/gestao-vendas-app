@@ -160,7 +160,7 @@ const app = {
       btnWhite.classList.toggle('active', themeName === 'white-gold');
     }
     if (notify) {
-      this.showToast(themeName === 'black-gold' ? 'Tema Preto & Dourado' : 'Tema Branco & Dourado');
+      this.showToast(themeName === 'black-gold' ? 'Tema Escuro' : 'Tema Claro');
     }
   },
 
