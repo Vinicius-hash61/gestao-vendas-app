@@ -1346,7 +1346,7 @@ const app = {
             <span class="pr-label">Data</span>
             <input class="kv-date" type="date" value="${this.esc(c.birthday || '')}" onchange="app.setBirthday('${c.id}', this.value)" />
           </div>
-          ${c.bday ? line('Próximo', `${this.daysLabel(c.bday.days)}${c.bday.age ? ` <small>${c.bday.age} anos</small>` : ''}`) : ''}
+          ${c.bday ? line('Próximo', `${this.daysLabel(c.bday.days)}${c.bday.age ? ` <small>${c.bday.age} ${c.bday.age === 1 ? 'ano' : 'anos'}</small>` : ''}`) : ''}
         </div>
       </div>
 
