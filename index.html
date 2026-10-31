@@ -2,13 +2,14 @@
 <html lang="pt-BR" data-theme="black-gold">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Ghost — Gestão de Vendas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
   <link rel="icon" href="logo.png" />
-  <link rel="stylesheet" href="styles.css?v=20261030g" />
+  <link rel="stylesheet" href="styles.css?v=20261030h" />
 </head>
 <body>
   <div class="presentation-shell">
@@ -312,6 +313,23 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261030g"></script>
+  <script src="app.js?v=20261030h"></script>
+  <script>
+    /* Se a página veio do cache com versão antiga, recarrega uma vez */
+    (function () {
+      try {
+        var tag = document.querySelector('script[src^="app.js"]');
+        var cur = tag && (tag.getAttribute('src').match(/v=(\w+)/) || [])[1];
+        fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
+          var m = t.match(/app\.js\?v=(\w+)/);
+          var key = 'ngd_reloaded_' + (m && m[1]);
+          if (m && cur && m[1] !== cur && !sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, '1');
+            location.reload();
+          }
+        }).catch(function () {});
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
