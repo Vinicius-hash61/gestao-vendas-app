@@ -391,6 +391,7 @@ const app = {
 
   navigate(screen) {
     this.currentScreen = screen;
+    if (screen !== 'visao360') this._v360Id = null;
     this.closeDrawer();
 
     document.querySelectorAll('.bottom-item').forEach(btn => {
@@ -1227,86 +1228,139 @@ const app = {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(this.suggestCampaign(c).text)}`, '_blank', 'noopener');
   },
 
+  initials(name) {
+    return this.esc(name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase());
+  },
+
+  daysLabel(d) {
+    return d === 0 ? 'hoje' : d === 1 ? 'amanhã' : `em ${d} dias`;
+  },
+
+  openVisao360(id) {
+    this._v360Id = id;
+    this.navigate('visao360');
+  },
+
+  closeVisao360() {
+    this._v360Id = null;
+    this.navigate('visao360');
+  },
+
   renderVisao360() {
     const all = this.getClient360();
+    const detail = this._v360Id && all.find(c => c.id === this._v360Id);
+    return detail ? this.renderVisao360Detail(detail) : this.renderVisao360List(all);
+  },
+
+  renderVisao360List(all) {
     const f = this._f360;
     const upcoming = all.filter(c => c.bday && c.bday.days <= 30).sort((a, b) => a.bday.days - b.bday.days);
+    const list = f === 'todos' ? all : all.filter(c => c.tier === f);
+    const tabs = [['todos', 'Todos'], ['Gold', 'Gold'], ['Plano VIP', 'VIP'], ['Cliente', 'Cliente']];
 
-    const filters = [
-      ['todos', 'Todos'],
-      ['aniversario', `Aniversariantes (${upcoming.length})`],
-      ['Gold', 'Gold'],
-      ['Plano VIP', 'Plano VIP'],
-      ['Cliente', 'Cliente']
-    ];
-
-    let list = all;
-    if (f === 'aniversario') list = upcoming;
-    else if (f !== 'todos') list = all.filter(c => c.tier === f);
-
-    // produto campeão da loja
     const sold = {};
     this.state.sales.forEach(sale => sale.items.forEach(it => { sold[it.name] = (sold[it.name] || 0) + it.qty; }));
-    const bestSeller = Object.entries(sold).sort((a, b) => b[1] - a[1])[0];
-
-    const row = (k, v) => `<div class="kv"><span>${k}</span><strong>${v}</strong></div>`;
+    const best = Object.entries(sold).sort((a, b) => b[1] - a[1])[0];
 
     return `
-      <div class="pr-hero" style="padding:18px 18px 16px">
-        <span class="pr-hero-label">Perfil da carteira</span>
-        <div class="pr-chips" style="margin-top:10px">
-          <div><span>Clientes</span><strong>${all.length}</strong></div>
-          <div><span>Aniversários (30d)</span><strong>${upcoming.length}</strong></div>
-          <div><span>Top cliente</span><strong>${all[0] ? this.esc(all[0].name.split(' ')[0]) : '—'}</strong></div>
-        </div>
-        ${bestSeller ? `<span class="pr-hero-note" style="display:block;margin-top:12px">Campeão de vendas: ${this.esc(bestSeller[0])} (${bestSeller[1]} un.)</span>` : ''}
+      <div class="v-summary">
+        <div><strong>${all.length}</strong><span>clientes</span></div>
+        <div><strong>${upcoming.length}</strong><span>aniversários em 30 dias</span></div>
+        <div><strong>${all[0] ? this.esc(all[0].name.split(' ')[0]) : '—'}</strong><span>mais comprou</span></div>
       </div>
 
-      <div class="filter-strip">
-        ${filters.map(([k, label]) => `<button class="filter-btn ${f === k ? 'active' : ''}" onclick="app.setFilter360('${k}')">${label}</button>`).join('')}
+      ${upcoming.length ? `
+        <div class="pr-section">
+          <h4 class="pr-title">Próximos aniversários</h4>
+          <div class="v-scroll">
+            ${upcoming.map(c => `
+              <button class="v-bday" onclick="app.openVisao360('${c.id}')">
+                <span class="v-avatar ${c.bday.days <= 7 ? 'ring' : ''}">${this.initials(c.name)}</span>
+                <strong>${this.esc(c.name.split(' ')[0])}</strong>
+                <small>${this.daysLabel(c.bday.days)}</small>
+              </button>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <div class="segmented-control" style="width:100%">
+        ${tabs.map(([k, label]) => `<button class="seg-btn ${f === k ? 'active' : ''}" style="flex:1" onclick="app.setFilter360('${k}')">${label}</button>`).join('')}
       </div>
 
-      <div class="list-stack">
+      <div class="pr-group">
         ${list.map(c => {
           const camp = this.suggestCampaign(c);
-          const bd = c.bday
-            ? `${this.fmtBirthday(c.birthday)} • ${c.bday.days === 0 ? 'é hoje!' : c.bday.days === 1 ? 'amanhã' : `em ${c.bday.days} dias`}${c.bday.age ? ` (${c.bday.age} anos)` : ''}`
-            : '';
           return `
-          <div class="card v360">
-            <div class="v360-head" onclick="app.openClientModal('${c.id}')">
-              <div class="avatar-box">${this.esc(c.name.split(' ').map(w => w[0]).slice(0, 2).join(''))}</div>
-              <div class="row-main">
-                <strong>${this.esc(c.name)}</strong>
-                <span>${this.esc(c.tier)} • ${c.rank}º no ranking • desde ${this.esc(c.since)}</span>
-              </div>
-            </div>
-
-            <div class="kv">
-              <span>Aniversário</span>
-              <strong>
-                ${bd ? `<small>${bd}</small>` : ''}
-                <input class="kv-date" type="date" value="${this.esc(c.birthday || '')}" onchange="app.setBirthday('${c.id}', this.value)" />
-              </strong>
-            </div>
-            ${row('Última compra', c.lastSale ? `${this.esc(c.lastSale.date)} • ${this.formatBRL(c.lastSale.total)}` : 'Sem compras')}
-            ${row('Total gasto', `${this.formatBRL(c.totalSpent)} • ${c.ordersCount} ${c.ordersCount === 1 ? 'pedido' : 'pedidos'}`)}
-            ${row('Ticket médio', this.formatBRL(c.avgTicket))}
-            ${row('Produto mais comprado', c.topProduct ? `${this.esc(c.topProduct[0])} (${c.topProduct[1]}x)` : '—')}
-            ${row('Categoria favorita', c.topCategory ? `${c.topCategory[0]} (${c.topCategory[1]} un.)` : '—')}
-            ${row('Pagamento preferido', c.topPayment ? this.esc(c.topPayment[0]) : '—')}
-
-            <div class="v360-camp">
-              <div>
-                <span>Campanha sugerida</span>
-                <strong>${camp.label}</strong>
-                <small>${this.esc(camp.why)}</small>
-              </div>
-              <button class="btn-gold" style="width:auto;padding:10px 16px;font-size:14px" onclick="app.sendCampaign('${c.id}')">Enviar</button>
-            </div>
-          </div>`;
-        }).join('') || '<div class="card" style="color:var(--text-muted)">Nenhum cliente neste filtro.</div>'}
+          <button class="v-row" onclick="app.openVisao360('${c.id}')">
+            <span class="v-avatar sm">${this.initials(c.name)}</span>
+            <span class="v-row-main">
+              <strong>${this.esc(c.name)}</strong>
+              <small>${c.topCategory ? `Gosta de ${this.esc(c.topCategory[0].toLowerCase())}` : this.esc(c.tier)}${c.lastSale ? ` • ${this.esc(c.lastSale.date)}` : ''}</small>
+            </span>
+            <span class="v-row-side">
+              <small>${this.esc(camp.label)}</small>
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+            </span>
+          </button>`;
+        }).join('') || '<div class="v-empty">Nenhum cliente neste filtro.</div>'}
       </div>
+      ${best ? `<p class="pr-hint" style="text-align:center">Campeão de vendas: ${this.esc(best[0])} (${best[1]} un.)</p>` : ''}
+    `;
+  },
+
+  renderVisao360Detail(c) {
+    const camp = this.suggestCampaign(c);
+    const line = (k, v) => `<div class="pr-line"><span class="pr-label">${k}</span><strong class="v-val">${v}</strong></div>`;
+
+    return `
+      <button class="v-back" onclick="app.closeVisao360()">
+        <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1L2 8l6 7"/></svg>
+        Visão 360
+      </button>
+
+      <div class="v-profile">
+        <span class="v-avatar lg">${this.initials(c.name)}</span>
+        <h3>${this.esc(c.name)}</h3>
+        <span>${this.esc(c.tier)} • ${c.rank}º no ranking • desde ${this.esc(c.since)}</span>
+      </div>
+
+      <div class="v-stats">
+        <div><strong>${this.formatBRL(c.totalSpent)}</strong><span>total gasto</span></div>
+        <div><strong>${c.ordersCount}</strong><span>${c.ordersCount === 1 ? 'pedido' : 'pedidos'}</span></div>
+        <div><strong>${this.formatBRL(c.avgTicket)}</strong><span>ticket médio</span></div>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Perfil de compra</h4>
+        <div class="pr-group">
+          ${line('Última compra', c.lastSale ? `${this.esc(c.lastSale.date)}` : '—')}
+          ${line('Mais comprado', c.topProduct ? `${this.esc(c.topProduct[0])} <small>${c.topProduct[1]}x</small>` : '—')}
+          ${line('Gosta de', c.topCategory ? this.esc(c.topCategory[0]) : '—')}
+          ${line('Pagamento', c.topPayment ? this.esc(c.topPayment[0]) : '—')}
+        </div>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Aniversário</h4>
+        <div class="pr-group">
+          <div class="pr-line">
+            <span class="pr-label">Data</span>
+            <input class="kv-date" type="date" value="${this.esc(c.birthday || '')}" onchange="app.setBirthday('${c.id}', this.value)" />
+          </div>
+          ${c.bday ? line('Próximo', `${this.daysLabel(c.bday.days)}${c.bday.age ? ` <small>${c.bday.age} anos</small>` : ''}`) : ''}
+        </div>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Campanha sugerida</h4>
+        <div class="pr-group v-camp">
+          <strong>${camp.label}</strong>
+          <span>${this.esc(camp.why)}</span>
+          <p>“${this.esc(camp.text)}”</p>
+          <button class="btn-gold" onclick="app.sendCampaign('${c.id}')">Enviar no WhatsApp</button>
+        </div>
+      </div>
+
+      <button class="v-link" onclick="app.openClientModal('${c.id}')">Ver cadastro completo</button>
     `;
   },
 
