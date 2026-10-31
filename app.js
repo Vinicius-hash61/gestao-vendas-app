@@ -1367,7 +1367,7 @@ const app = {
   },
 
   /* ==================== 4.2 CAMPANHAS ==================== */
-  _camp: { tab: 'disparo', channel: 'whatsapp', templateId: null, audience: 'todos', subject: '', body: '', sent: {} },
+  _camp: { tab: 'disparo', step: 1, channel: 'whatsapp', templateId: null, audience: 'todos', selected: null, subject: '', body: '', sent: {} },
   _tplChannel: 'whatsapp',
 
   defaultTemplates() {
@@ -1400,12 +1400,15 @@ const app = {
       .replace(/\{produto\}/g, c && c.topProduct ? c.topProduct[0] : 'nossas peças');
   },
 
+  campContactable(c) {
+    return this._camp.channel === 'whatsapp'
+      ? String(c.phone).replace(/\D/g, '').length >= 10
+      : /@/.test(c.email || '');
+  },
+
   campRecipients() {
     const st = this._camp;
-    return this.getClient360().filter(c => {
-      if (st.audience === 'aniversario' ? !(c.bday && c.bday.days <= 30) : (st.audience !== 'todos' && c.tier !== st.audience)) return false;
-      return st.channel === 'whatsapp' ? String(c.phone).replace(/\D/g, '').length >= 10 : /@/.test(c.email || '');
-    });
+    return this.getClient360().filter(c => this.campContactable(c) && (!st.selected || st.selected[c.id]));
   },
 
   campAudienceSize(key) {
@@ -1420,6 +1423,8 @@ const app = {
   setCampChannel(ch) {
     const first = this.getTemplates().find(t => t.channel === ch);
     this._camp.channel = ch;
+    this._camp.selected = null;
+    this._camp.audience = 'todos';
     this._camp.sent = {};
     this._camp.templateId = first ? first.id : null;
     this._camp.subject = first ? first.subject : '';
@@ -1483,50 +1488,127 @@ const app = {
     `;
   },
 
+  setCampStep(n) {
+    const st = this._camp;
+    if (n >= 2 && !st.templateId && !st.body.trim()) return this.showToast('Escolha um template');
+    if (n === 3 && !st.body.trim()) return this.showToast('Escreva a mensagem');
+    st.step = n;
+    this.navigate('campanhas');
+  },
+
+  toggleCampClient(id) {
+    const st = this._camp;
+    if (!st.selected) {
+      st.selected = {};
+      this.getClient360().filter(c => this.campContactable(c)).forEach(c => { st.selected[c.id] = true; });
+    }
+    st.selected[id] = !st.selected[id];
+    st.sent = {};
+    this.navigate('campanhas');
+  },
+
+  setCampAudience(key) {
+    const st = this._camp;
+    st.audience = key;
+    st.selected = {};
+    this.getClient360().forEach(c => {
+      const inAud = key === 'todos' ? true : key === 'aniversario' ? (c.bday && c.bday.days <= 30) : c.tier === key;
+      if (inAud && this.campContactable(c)) st.selected[c.id] = true;
+    });
+    st.sent = {};
+    this.navigate('campanhas');
+  },
+
   renderCampDisparo() {
     const st = this._camp;
-    const tpls = this.getTemplates().filter(t => t.channel === st.channel);
+    const steps = ['Template', 'Mensagem', 'Clientes'];
+    const stepper = `
+      <div class="camp-steps">
+        ${steps.map((l, i) => `<button class="${st.step === i + 1 ? 'on' : st.step > i + 1 ? 'done' : ''}" onclick="app.setCampStep(${i + 1})"><i>${i + 1}</i>${l}</button>`).join('')}
+      </div>`;
+    const check = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const chevron = `<svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>`;
+
+    if (st.step === 1) {
+      const tpls = this.getTemplates().filter(t => t.channel === st.channel);
+      return `
+        ${stepper}
+        <div class="segmented-control" style="width:100%">
+          <button class="seg-btn ${st.channel === 'whatsapp' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('whatsapp')">WhatsApp</button>
+          <button class="seg-btn ${st.channel === 'email' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('email')">E-mail</button>
+        </div>
+        <div class="pr-section">
+          <h4 class="pr-title">Qual template usar?</h4>
+          <div class="pr-group">
+            ${tpls.map(t => `
+              <button class="v-row" onclick="app.selectCampTemplate('${t.id}')">
+                <span class="v-row-main">
+                  <strong>${this.esc(t.name)}</strong>
+                  <small>${this.esc(t.body.replace(/\s+/g, ' '))}</small>
+                </span>
+                <span class="v-row-side" style="color:var(--gold)">${t.id === st.templateId ? check : ''}</span>
+              </button>`).join('')}
+            <button class="v-row" onclick="app.openTemplateEditor(null)">
+              <span class="v-row-main"><strong style="color:var(--gold);font-weight:500">+ Novo template</strong></span>
+            </button>
+          </div>
+        </div>
+        <button class="btn-gold" onclick="app.setCampStep(2)">Continuar</button>
+      `;
+    }
+
+    if (st.step === 2) {
+      const sample = this.getClient360().find(c => this.campContactable(c)) || this.getClient360()[0];
+      return `
+        ${stepper}
+        <div class="pr-section">
+          <h4 class="pr-title">Mensagem</h4>
+          <div class="pr-group camp-compose">
+            ${st.channel === 'email' ? `<input id="campSubject" class="camp-field" placeholder="Assunto" value="${this.esc(st.subject)}" oninput="app.onCampInput('subject', this)" />` : ''}
+            <textarea id="campBody" class="camp-field camp-text" rows="5" placeholder="Escreva a mensagem..." oninput="app.onCampInput('body', this)">${this.esc(st.body)}</textarea>
+            ${this.varChips('campBody')}
+          </div>
+          <button class="v-link" style="align-self:flex-start" onclick="app.openTemplateEditor(null, true)">Salvar como template</button>
+        </div>
+        <div class="camp-preview" id="campPreview">${this.campPreviewHtml(sample)}</div>
+        <div class="camp-nav">
+          <button class="btn-outline" onclick="app.setCampStep(1)">Voltar</button>
+          <button class="btn-gold" onclick="app.setCampStep(3)">Continuar</button>
+        </div>
+      `;
+    }
+
+    const all = this.getClient360();
     const rec = this.campRecipients();
     const audiences = [['todos', 'Todos'], ['aniversario', 'Aniversariantes'], ['Gold', 'Gold'], ['Plano VIP', 'VIP'], ['Cliente', 'Cliente']];
-    const skipped = (st.audience === 'todos' ? this.campAudienceSize('todos') : this.campAudienceSize(st.audience)) - rec.length;
-
+    const wa = st.channel === 'whatsapp';
     return `
-      <div class="segmented-control" style="width:100%">
-        <button class="seg-btn ${st.channel === 'whatsapp' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('whatsapp')">WhatsApp</button>
-        <button class="seg-btn ${st.channel === 'email' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('email')">E-mail</button>
+      ${stepper}
+      <div class="v-scroll" style="gap:8px;padding:0 2px">
+        ${audiences.map(([k, l]) => `<button class="filter-btn ${st.audience === k ? 'active' : ''}" onclick="app.setCampAudience('${k}')">${l}</button>`).join('')}
       </div>
-
       <div class="pr-section">
-        <h4 class="pr-title">Template</h4>
-        <div class="v-scroll" style="gap:8px;padding-left:2px">
-          ${tpls.map(t => `<button class="filter-btn ${t.id === st.templateId ? 'active' : ''}" onclick="app.selectCampTemplate('${t.id}')">${this.esc(t.name)}</button>`).join('')}
-          <button class="filter-btn" onclick="app.openTemplateEditor(null)">+ Novo</button>
+        <h4 class="pr-title">Quem vai receber? (${rec.length} de ${all.length})</h4>
+        <div class="pr-group">
+          ${all.map(c => {
+            const ok = this.campContactable(c);
+            const on = ok && (!st.selected || st.selected[c.id]);
+            return `
+            <button class="v-row" ${ok ? `onclick="app.toggleCampClient('${c.id}')"` : 'disabled style="opacity:.45"'}>
+              <span class="camp-check ${on ? 'on' : ''}">${on ? check : ''}</span>
+              <span class="v-row-main">
+                <strong>${this.esc(c.name)}</strong>
+                <small>${ok ? this.esc(wa ? c.phone : c.email) : `Sem ${wa ? 'WhatsApp' : 'e-mail'} cadastrado`}</small>
+              </span>
+            </button>`;
+          }).join('')}
         </div>
       </div>
-
-      <div class="pr-section">
-        <h4 class="pr-title">Mensagem</h4>
-        <div class="pr-group camp-compose">
-          ${st.channel === 'email' ? `<input id="campSubject" class="camp-field" placeholder="Assunto" value="${this.esc(st.subject)}" oninput="app.onCampInput('subject', this)" />` : ''}
-          <textarea id="campBody" class="camp-field camp-text" rows="5" placeholder="Escreva a mensagem..." oninput="app.onCampInput('body', this)">${this.esc(st.body)}</textarea>
-          ${this.varChips('campBody')}
-        </div>
-        <button class="v-link" style="align-self:flex-start" onclick="app.openTemplateEditor(null, true)">Salvar como template</button>
+      <div class="camp-nav">
+        <button class="btn-outline" onclick="app.setCampStep(2)">Voltar</button>
+        <button class="btn-gold" ${rec.length ? '' : 'disabled style="opacity:.4"'} onclick="app.openCampQueue()">Enviar para ${rec.length}</button>
       </div>
-
-      <div class="pr-section">
-        <h4 class="pr-title">Público</h4>
-        <div class="v-scroll" style="gap:8px;padding-left:2px">
-          ${audiences.map(([k, l]) => `<button class="filter-btn ${st.audience === k ? 'active' : ''}" onclick="app.setCamp({audience:'${k}', sent:{}})">${l} (${this.campAudienceSize(k)})</button>`).join('')}
-        </div>
-      </div>
-
-      <div class="camp-preview" id="campPreview">${this.campPreviewHtml(rec[0])}</div>
-
-      <button class="btn-gold" ${rec.length && st.body.trim() ? '' : 'disabled style="opacity:.4"'} onclick="app.openCampQueue()">Iniciar disparo para ${rec.length} ${rec.length === 1 ? 'cliente' : 'clientes'}</button>
-      <p class="pr-hint" style="text-align:center">
-        ${skipped > 0 ? `${skipped} sem ${st.channel === 'whatsapp' ? 'WhatsApp' : 'e-mail'} cadastrado. ` : ''}Cada envio abre ${st.channel === 'whatsapp' ? 'o WhatsApp' : 'seu e-mail'} com a mensagem pronta; é só tocar em enviar.
-      </p>
+      <p class="pr-hint" style="text-align:center">Cada envio abre ${wa ? 'o WhatsApp' : 'seu e-mail'} com a mensagem pronta; é só tocar em enviar.</p>
     `;
   },
 
