@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
   <link rel="icon" href="logo.png" />
-  <link rel="stylesheet" href="styles.css?v=20261030h" />
+  <link rel="stylesheet" href="styles.css?v=20261030i" />
 </head>
 <body>
   <div class="presentation-shell">
@@ -63,6 +63,9 @@
           </button>
           <button onclick="app.navigate('visao360')" class="jump-btn" data-pres="visao360">
             Visão 360 do Cliente
+          </button>
+          <button onclick="app.navigate('campanhas')" class="jump-btn" data-pres="campanhas">
+            Campanhas (Zap &amp; E-mail)
           </button>
           <button onclick="app.navigate('crm')" class="jump-btn" data-pres="crm">
             CRM &amp; Plano VIP
@@ -166,6 +169,15 @@
                 <span>Visão 360</span>
               </span>
               <span class="drawer-tag gold">Perfil</span>
+            </button>
+          </li>
+          <li>
+            <button class="drawer-link" data-screen="campanhas" onclick="app.navigate('campanhas')">
+              <span class="drawer-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18L3 13z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                <span>Campanhas</span>
+              </span>
+              <span class="drawer-tag gold">Zap & e-mail</span>
             </button>
           </li>
           <li>
@@ -313,7 +325,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261030h"></script>
+  <script src="app.js?v=20261030i"></script>
   <script>
     /* Se a página veio do cache com versão antiga, recarrega uma vez */
     (function () {

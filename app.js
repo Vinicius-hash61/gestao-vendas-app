@@ -411,6 +411,7 @@ const app = {
       ajuste: ['PREFERÊNCIAS', 'Ajustes'],
       clientes: ['CARTEIRA VIP & GOLD', 'Clientes'],
       visao360: ['PERFIL ANALÍTICO', 'Visão 360'],
+      campanhas: ['DISPARO & TEMPLATES', 'Campanhas'],
       produtos: ['ESTOQUE DE PEÇAS', 'Produtos'],
       crm: ['RELACIONAMENTO', 'CRM & Plano VIP'],
       metas: ['DESEMPENHO MENSAL', 'Metas'],
@@ -434,6 +435,7 @@ const app = {
       case 'fluxo': vp.innerHTML = this.renderFluxo(); break;
       case 'clientes': vp.innerHTML = this.renderClientes(); break;
       case 'visao360': vp.innerHTML = this.renderVisao360(); break;
+      case 'campanhas': vp.innerHTML = this.renderCampanhas(); break;
       case 'produtos': vp.innerHTML = this.renderProdutos(); break;
       case 'crm': vp.innerHTML = this.renderCRM(); break;
       case 'metas': vp.innerHTML = this.renderMetas(); break;
@@ -1362,6 +1364,368 @@ const app = {
 
       <button class="v-link" onclick="app.openClientModal('${c.id}')">Ver cadastro completo</button>
     `;
+  },
+
+  /* ==================== 4.2 CAMPANHAS ==================== */
+  _camp: { tab: 'disparo', channel: 'whatsapp', templateId: null, audience: 'todos', subject: '', body: '', sent: {} },
+  _tplChannel: 'whatsapp',
+
+  defaultTemplates() {
+    return [
+      { id: 't1', name: 'Aniversário', channel: 'whatsapp', subject: '', body: 'Oi {nome}! Seu aniversário está chegando e a {loja} preparou um presente especial pra você. Posso te mandar?' },
+      { id: 't2', name: 'Lançamento exclusivo', channel: 'whatsapp', subject: '', body: 'Oi {nome}! Chegou um drop novo de {categoria} na {loja} e você tem acesso antecipado. Quer que eu reserve o seu tamanho?' },
+      { id: 't3', name: 'Recompra', channel: 'whatsapp', subject: '', body: 'Oi {nome}! Vi que você curte {produto}. Chegaram novidades parecidas na {loja}. Quer dar uma olhada?' },
+      { id: 't4', name: 'Primeira compra', channel: 'whatsapp', subject: '', body: 'Oi {nome}! Separei peças da {loja} que combinam com você. Quer ver?' },
+      { id: 't5', name: 'Novidades da coleção', channel: 'email', subject: 'Novidades da {loja} para você, {nome}', body: 'Olá, {nome}!\n\nA nova coleção da {loja} acabou de chegar e separamos peças de {categoria} que combinam com você.\n\nResponda este e-mail ou chame no WhatsApp para reservar o seu tamanho.\n\nAbraço,\nEquipe {loja}' },
+      { id: 't6', name: 'Feliz aniversário', channel: 'email', subject: 'Feliz aniversário, {nome}!', body: 'Olá, {nome}!\n\nA equipe da {loja} deseja um feliz aniversário. Preparamos um presente especial para você comemorar com estilo.\n\nÉ só responder este e-mail para resgatar.\n\nAbraço,\nEquipe {loja}' }
+    ];
+  },
+
+  getTemplates() {
+    if (!Array.isArray(this.state.templates)) this.state.templates = this.defaultTemplates();
+    return this.state.templates;
+  },
+
+  getCampLog() {
+    if (!Array.isArray(this.state.campaignLog)) this.state.campaignLog = [];
+    return this.state.campaignLog;
+  },
+
+  fillTemplate(text, c) {
+    const first = c ? c.name.split(' ')[0] : 'cliente';
+    return String(text || '')
+      .replace(/\{nome\}/g, first)
+      .replace(/\{loja\}/g, this.state.storeName)
+      .replace(/\{categoria\}/g, c && c.topCategory ? c.topCategory[0].toLowerCase() : 'novidades')
+      .replace(/\{produto\}/g, c && c.topProduct ? c.topProduct[0] : 'nossas peças');
+  },
+
+  campRecipients() {
+    const st = this._camp;
+    return this.getClient360().filter(c => {
+      if (st.audience === 'aniversario' ? !(c.bday && c.bday.days <= 30) : (st.audience !== 'todos' && c.tier !== st.audience)) return false;
+      return st.channel === 'whatsapp' ? String(c.phone).replace(/\D/g, '').length >= 10 : /@/.test(c.email || '');
+    });
+  },
+
+  campAudienceSize(key) {
+    return this.getClient360().filter(c => key === 'todos' ? true : key === 'aniversario' ? (c.bday && c.bday.days <= 30) : c.tier === key).length;
+  },
+
+  setCamp(patch) {
+    Object.assign(this._camp, patch);
+    this.navigate('campanhas');
+  },
+
+  setCampChannel(ch) {
+    const first = this.getTemplates().find(t => t.channel === ch);
+    this._camp.channel = ch;
+    this._camp.sent = {};
+    this._camp.templateId = first ? first.id : null;
+    this._camp.subject = first ? first.subject : '';
+    this._camp.body = first ? first.body : '';
+    this.navigate('campanhas');
+  },
+
+  selectCampTemplate(id) {
+    const t = this.getTemplates().find(x => x.id === id);
+    if (!t) return;
+    Object.assign(this._camp, { templateId: id, subject: t.subject || '', body: t.body, sent: {} });
+    this.navigate('campanhas');
+  },
+
+  insertVar(targetId, v) {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const a = el.selectionStart ?? el.value.length;
+    const b = el.selectionEnd ?? a;
+    el.value = el.value.slice(0, a) + v + el.value.slice(b);
+    el.focus();
+    el.setSelectionRange(a + v.length, a + v.length);
+    el.dispatchEvent(new Event('input'));
+  },
+
+  varChips(targetId) {
+    return `<div class="camp-vars">${['{nome}', '{loja}', '{categoria}', '{produto}'].map(v =>
+      `<button type="button" onclick="app.insertVar('${targetId}', '${v}')">${v}</button>`).join('')}</div>`;
+  },
+
+  onCampInput(field, el) {
+    this._camp[field] = el.value;
+    this._camp.sent = {};
+    const sample = this.campRecipients()[0];
+    const box = document.getElementById('campPreview');
+    if (box) box.innerHTML = this.campPreviewHtml(sample);
+  },
+
+  campPreviewHtml(sample) {
+    const st = this._camp;
+    if (!sample) return '<span class="pr-hint">Nenhum cliente com contato para este público.</span>';
+    const subj = st.channel === 'email' ? `<strong>${this.esc(this.fillTemplate(st.subject, sample))}</strong>` : '';
+    return `<small>Prévia para ${this.esc(sample.name)}</small>${subj}<p>${this.esc(this.fillTemplate(st.body, sample))}</p>`;
+  },
+
+  renderCampanhas() {
+    const st = this._camp;
+    if (st.templateId === null && !st.body) {
+      const first = this.getTemplates().find(t => t.channel === st.channel);
+      if (first) Object.assign(st, { templateId: first.id, subject: first.subject || '', body: first.body });
+    }
+    const tabs = [['disparo', 'Disparo'], ['templates', 'Templates'], ['historico', 'Histórico']];
+    const body = st.tab === 'templates' ? this.renderCampTemplates()
+      : st.tab === 'historico' ? this.renderCampHistory()
+      : this.renderCampDisparo();
+    return `
+      <div class="segmented-control" style="width:100%">
+        ${tabs.map(([k, l]) => `<button class="seg-btn ${st.tab === k ? 'active' : ''}" style="flex:1" onclick="app.setCamp({tab:'${k}'})">${l}</button>`).join('')}
+      </div>
+      ${body}
+    `;
+  },
+
+  renderCampDisparo() {
+    const st = this._camp;
+    const tpls = this.getTemplates().filter(t => t.channel === st.channel);
+    const rec = this.campRecipients();
+    const audiences = [['todos', 'Todos'], ['aniversario', 'Aniversariantes'], ['Gold', 'Gold'], ['Plano VIP', 'VIP'], ['Cliente', 'Cliente']];
+    const skipped = (st.audience === 'todos' ? this.campAudienceSize('todos') : this.campAudienceSize(st.audience)) - rec.length;
+
+    return `
+      <div class="segmented-control" style="width:100%">
+        <button class="seg-btn ${st.channel === 'whatsapp' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('whatsapp')">WhatsApp</button>
+        <button class="seg-btn ${st.channel === 'email' ? 'active' : ''}" style="flex:1" onclick="app.setCampChannel('email')">E-mail</button>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Template</h4>
+        <div class="v-scroll" style="gap:8px;padding-left:2px">
+          ${tpls.map(t => `<button class="filter-btn ${t.id === st.templateId ? 'active' : ''}" onclick="app.selectCampTemplate('${t.id}')">${this.esc(t.name)}</button>`).join('')}
+          <button class="filter-btn" onclick="app.openTemplateEditor(null)">+ Novo</button>
+        </div>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Mensagem</h4>
+        <div class="pr-group camp-compose">
+          ${st.channel === 'email' ? `<input id="campSubject" class="camp-field" placeholder="Assunto" value="${this.esc(st.subject)}" oninput="app.onCampInput('subject', this)" />` : ''}
+          <textarea id="campBody" class="camp-field camp-text" rows="5" placeholder="Escreva a mensagem..." oninput="app.onCampInput('body', this)">${this.esc(st.body)}</textarea>
+          ${this.varChips('campBody')}
+        </div>
+        <button class="v-link" style="align-self:flex-start" onclick="app.openTemplateEditor(null, true)">Salvar como template</button>
+      </div>
+
+      <div class="pr-section">
+        <h4 class="pr-title">Público</h4>
+        <div class="v-scroll" style="gap:8px;padding-left:2px">
+          ${audiences.map(([k, l]) => `<button class="filter-btn ${st.audience === k ? 'active' : ''}" onclick="app.setCamp({audience:'${k}', sent:{}})">${l} (${this.campAudienceSize(k)})</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="camp-preview" id="campPreview">${this.campPreviewHtml(rec[0])}</div>
+
+      <button class="btn-gold" ${rec.length && st.body.trim() ? '' : 'disabled style="opacity:.4"'} onclick="app.openCampQueue()">Iniciar disparo para ${rec.length} ${rec.length === 1 ? 'cliente' : 'clientes'}</button>
+      <p class="pr-hint" style="text-align:center">
+        ${skipped > 0 ? `${skipped} sem ${st.channel === 'whatsapp' ? 'WhatsApp' : 'e-mail'} cadastrado. ` : ''}Cada envio abre ${st.channel === 'whatsapp' ? 'o WhatsApp' : 'seu e-mail'} com a mensagem pronta; é só tocar em enviar.
+      </p>
+    `;
+  },
+
+  openUrl(url, blank) {
+    const a = document.createElement('a');
+    a.href = url;
+    if (blank) { a.target = '_blank'; a.rel = 'noopener'; }
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  },
+
+  openCampQueue() {
+    const st = this._camp;
+    const rec = this.campRecipients();
+    const done = rec.filter(c => st.sent[c.id]).length;
+    const next = rec.find(c => !st.sent[c.id]);
+    const wa = st.channel === 'whatsapp';
+
+    document.getElementById('genericModalTitle').textContent = `Disparo • ${done}/${rec.length}`;
+    document.getElementById('genericModalBody').innerHTML = `
+      <button class="btn-gold" ${next ? '' : 'disabled style="opacity:.5"'} onclick="app.sendCamp('${next ? next.id : ''}')">
+        ${next ? `Enviar para ${this.esc(next.name.split(' ')[0])}` : 'Disparo concluído'}
+      </button>
+      ${!wa && rec.length > 1 ? `<button class="btn-outline" onclick="app.sendEmailBulk()">Abrir e-mail com todos em cópia oculta</button>` : ''}
+      <div class="pr-group">
+        ${rec.map(c => `
+          <div class="v-row" style="cursor:default">
+            <span class="v-avatar sm">${this.initials(c.name)}</span>
+            <span class="v-row-main">
+              <strong>${this.esc(c.name)}</strong>
+              <small>${this.esc(wa ? c.phone : c.email)}</small>
+            </span>
+            ${st.sent[c.id]
+              ? `<span style="color:var(--success);font-size:14px;font-weight:600">Enviado</span>`
+              : `<button class="btn-outline" onclick="app.sendCamp('${c.id}')">Enviar</button>`}
+          </div>`).join('')}
+      </div>
+    `;
+    document.getElementById('genericModalOverlay').classList.add('open');
+  },
+
+  sendCamp(id) {
+    if (!id) return;
+    const st = this._camp;
+    const c = this.getClient360().find(x => x.id === id);
+    if (!c) return;
+    const msg = this.fillTemplate(st.body, c);
+    if (st.channel === 'whatsapp') {
+      let num = String(c.phone).replace(/\D/g, '');
+      if (num.length <= 11) num = `55${num}`;
+      this.openUrl(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, true);
+    } else {
+      this.openUrl(`mailto:${c.email}?subject=${encodeURIComponent(this.fillTemplate(st.subject, c))}&body=${encodeURIComponent(msg)}`, false);
+    }
+    this.logCamp(c);
+    st.sent[id] = true;
+    this.openCampQueue();
+  },
+
+  sendEmailBulk() {
+    const st = this._camp;
+    const rec = this.campRecipients();
+    const bcc = rec.map(c => c.email).join(',');
+    this.openUrl(`mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(this.fillTemplate(st.subject, null))}&body=${encodeURIComponent(this.fillTemplate(st.body, null))}`, false);
+    rec.forEach(c => { this.logCamp(c); st.sent[c.id] = true; });
+    this.openCampQueue();
+  },
+
+  logCamp(c) {
+    const st = this._camp;
+    const tpl = this.getTemplates().find(t => t.id === st.templateId);
+    const log = this.getCampLog();
+    log.unshift({ ts: Date.now(), channel: st.channel, template: tpl ? tpl.name : 'Mensagem avulsa', clientId: c.id, name: c.name });
+    if (log.length > 200) log.length = 200;
+    this.saveState();
+  },
+
+  renderCampHistory() {
+    const log = this.getCampLog();
+    if (!log.length) {
+      return `<div class="reels-empty" style="height:auto;padding:40px 20px"><strong>Nenhum disparo ainda</strong><span>Os envios que você fizer aparecem aqui.</span></div>`;
+    }
+    const fmt = ts => new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="pr-group">
+        ${log.slice(0, 60).map(l => `
+          <div class="v-row" style="cursor:default">
+            <span class="v-avatar sm">${this.initials(l.name)}</span>
+            <span class="v-row-main">
+              <strong>${this.esc(l.name)}</strong>
+              <small>${this.esc(l.template)} • ${l.channel === 'whatsapp' ? 'WhatsApp' : 'E-mail'}</small>
+            </span>
+            <small style="color:var(--text-muted);font-size:12.5px;white-space:nowrap">${fmt(l.ts)}</small>
+          </div>`).join('')}
+      </div>
+      <button class="v-link" onclick="app.clearCampLog()">Limpar histórico</button>
+    `;
+  },
+
+  clearCampLog() {
+    this.state.campaignLog = [];
+    this.saveState();
+    this.navigate('campanhas');
+  },
+
+  renderCampTemplates() {
+    const list = this.getTemplates();
+    const group = (ch, label) => {
+      const items = list.filter(t => t.channel === ch);
+      return `
+        <div class="pr-section">
+          <h4 class="pr-title">${label}</h4>
+          <div class="pr-group">
+            ${items.map(t => `
+              <button class="v-row" onclick="app.openTemplateEditor('${t.id}')">
+                <span class="v-row-main">
+                  <strong>${this.esc(t.name)}</strong>
+                  <small>${this.esc(t.body.replace(/\s+/g, ' '))}</small>
+                </span>
+                <span class="v-row-side"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></span>
+              </button>`).join('') || '<div class="v-empty">Nenhum template.</div>'}
+          </div>
+        </div>`;
+    };
+    return `
+      ${group('whatsapp', 'WhatsApp')}
+      ${group('email', 'E-mail')}
+      <button class="btn-gold" onclick="app.openTemplateEditor(null)">+ Novo template</button>
+    `;
+  },
+
+  openTemplateEditor(id, fromComposer = false) {
+    const existing = id ? this.getTemplates().find(t => t.id === id) : null;
+    const st = this._camp;
+    const t = existing || (fromComposer
+      ? { name: '', channel: st.channel, subject: st.subject, body: st.body }
+      : { name: '', channel: this._camp.channel, subject: '', body: '' });
+    this._tplChannel = t.channel;
+    this._editingTpl = existing ? existing.id : null;
+
+    document.getElementById('genericModalTitle').textContent = existing ? 'Editar template' : 'Novo template';
+    document.getElementById('genericModalBody').innerHTML = `
+      <div class="field-group">
+        <label>Nome</label>
+        <input id="tplName" class="input-box" placeholder="Ex: Black Friday" value="${this.esc(t.name)}" />
+      </div>
+      <div class="segmented-control" style="width:100%">
+        <button class="seg-btn ${t.channel === 'whatsapp' ? 'active' : ''}" style="flex:1" onclick="app.setTplChannel(this, 'whatsapp')">WhatsApp</button>
+        <button class="seg-btn ${t.channel === 'email' ? 'active' : ''}" style="flex:1" onclick="app.setTplChannel(this, 'email')">E-mail</button>
+      </div>
+      <div class="field-group" id="tplSubjectWrap" style="${t.channel === 'email' ? '' : 'display:none'}">
+        <label>Assunto</label>
+        <input id="tplSubject" class="input-box" value="${this.esc(t.subject || '')}" />
+      </div>
+      <div class="field-group">
+        <label>Mensagem</label>
+        <textarea id="tplBody" class="input-box" rows="6">${this.esc(t.body)}</textarea>
+        ${this.varChips('tplBody')}
+      </div>
+      <button class="btn-gold" onclick="app.saveTemplate()">Salvar template</button>
+      ${existing ? `<button class="btn-outline" style="color:var(--danger)" onclick="app.deleteTemplate('${existing.id}')">Excluir template</button>` : ''}
+    `;
+    document.getElementById('genericModalOverlay').classList.add('open');
+  },
+
+  setTplChannel(btn, ch) {
+    this._tplChannel = ch;
+    btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('tplSubjectWrap').style.display = ch === 'email' ? '' : 'none';
+  },
+
+  saveTemplate() {
+    const name = document.getElementById('tplName').value.trim();
+    const body = document.getElementById('tplBody').value.trim();
+    if (!name) return this.showToast('Dê um nome ao template');
+    if (!body) return this.showToast('Escreva a mensagem');
+    const data = { name, channel: this._tplChannel, subject: document.getElementById('tplSubject').value.trim(), body };
+    const list = this.getTemplates();
+    let id = this._editingTpl;
+    if (id) {
+      Object.assign(list.find(t => t.id === id), data);
+    } else {
+      id = `t-${Date.now()}`;
+      list.push({ id, ...data });
+    }
+    this.saveState();
+    this.closeGenericModal();
+    this.showToast('Template salvo');
+    Object.assign(this._camp, { channel: data.channel, templateId: id, subject: data.subject, body: data.body, sent: {} });
+    this.navigate('campanhas');
+  },
+
+  deleteTemplate(id) {
+    this.state.templates = this.getTemplates().filter(t => t.id !== id);
+    if (this._camp.templateId === id) Object.assign(this._camp, { templateId: null, subject: '', body: '' });
+    this.saveState();
+    this.closeGenericModal();
+    this.navigate('campanhas');
   },
 
   /* ==================== 5. + PRODUTOS ==================== */

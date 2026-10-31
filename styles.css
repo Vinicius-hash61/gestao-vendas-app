@@ -2303,3 +2303,76 @@ body::before {
 .pr-line .pr-label {
   white-space: nowrap;
 }
+
+/* Campanhas */
+.camp-compose {
+  padding: 4px 14px 12px;
+}
+
+.camp-field {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 12px 0;
+  outline: none;
+  resize: none;
+}
+
+#campSubject {
+  border-bottom: 0.5px solid var(--glass-line);
+  font-weight: 600;
+}
+
+.camp-text {
+  min-height: 110px;
+}
+
+.camp-vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.camp-vars button {
+  border: none;
+  background: var(--bg-card-subtle);
+  color: var(--gold);
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  cursor: pointer;
+}
+
+.camp-preview {
+  background: var(--glass);
+  border: 0.5px solid var(--glass-line);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.camp-preview small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.camp-preview p {
+  font-size: 14.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.btn-gold:disabled {
+  cursor: not-allowed;
+}
+
+.input-box[rows] {
+  resize: none;
+  line-height: 1.45;
+}
